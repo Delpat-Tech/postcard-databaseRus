@@ -1,0 +1,314 @@
+{
+	"info": {
+		"_postman_id": "0219520d-766c-4dcf-ad96-b7426ef74c4b",
+		"name": "postcard",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29424439"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": []
+		},
+		{
+			"name": "orders",
+			"item": []
+		},
+		{
+			"name": "designs",
+			"item": []
+		},
+		{
+			"name": "get_token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"jwt\", pm.response.json().token);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"apiKey\":\"e5ea57073b7e3613bd97eeb723ed05e0\",\r\n    \"apiSecret\":\"NGIzNjgyMTEtMjVjYi00MjI0LWIwY2EtODU0NjI5YjZmNzVj\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/auth/login",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "place_order",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"mailClass\": \"FirstClass\",\n  \"recipients\": [\n    {\n      \"company\": \"PCM Integrations\",\n      \"firstName\": \"Alex\",\n      \"lastName\": \"Doe\",\n      \"address\": \"2145 Sunnydale Blvd\",\n      \"address2\": \"Bldg. 102\",\n      \"city\": \"Clearwater\",\n      \"state\": \"FL\",\n      \"zipCode\": \"33765\",\n      \"extRefNbr\": \"string\",\n      \"variables\": [\n        {\n          \"key\": \"string\",\n          \"value\": \"string\"\n        }\n      ]\n    }\n  ],\n  \"size\": \"46\",\n  \"addons\": null,\n  \"designID\": 0,\n  \"front\": \"Raw HTML\",\n  \"back\": \"Raw HTML\",\n  \"addressing\": {\n    \"font\": \"Bradley Hand\",\n    \"fontColor\": \"Black\",\n    \"exceptionalAddressingType\": \"resident\"\n  },\n  \"extRefNbr\": \"string\",\n  \"mailDate\": \"YYYY-MM-DD\",\n  \"returnAddress\": {\n    \"company\": \"PCM Integrations\",\n    \"firstName\": \"Alex\",\n    \"lastName\": \"Doe\",\n    \"address\": \"2145 Sunnydale Blvd\",\n    \"address2\": \"Bldg. 102\",\n    \"city\": \"Clearwater\",\n    \"state\": \"FL\",\n    \"zipCode\": \"33765\"\n  },\n  \"globalDesignVariables\": [\n    {\n      \"key\": \"string\",\n      \"value\": \"string\"\n    }\n  ],\n  \"qrCodeID\": 0\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/order/postcard",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"order",
+						"postcard"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_balance",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/integration/balance",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"integration",
+						"balance"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_designs",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/design?page=1&perPage=100",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"design"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "perPage",
+							"value": "100"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "make_design",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"string\",\n  \"size\": \"46\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/design/custom",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"design",
+						"custom"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete_order",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/order/{{orderID}}",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"order",
+						"{{orderID}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_all_orders",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/order",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"order"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "url",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "jwt",
+			"value": ""
+		}
+	]
+}
