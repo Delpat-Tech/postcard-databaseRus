@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Template = require("../models/Template");
 const { adminAuth } = require("../middleware/auth");
-const postcardManiaService = require("../services/postcardManiaService");
+const postcardManiaService = require("../services/postcard");
 
 // GET /api/templates/public - Get all public templates
 router.get("/public", async (req, res) => {

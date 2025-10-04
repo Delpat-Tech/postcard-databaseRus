@@ -3,7 +3,7 @@ const router = express.Router();
 const { adminAuth } = require("../middleware/auth");
 const Order = require("../models/Order");
 const Template = require("../models/Template");
-const postcardManiaService = require("../services/postcardManiaService");
+const postcardManiaService = require("../services/postcard");
 
 // GET /api/admin/designs/import - Import latest designs from PostcardMania
 router.get("/designs/import", adminAuth, async (req, res) => {

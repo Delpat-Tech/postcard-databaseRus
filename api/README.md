@@ -201,3 +201,78 @@ HTTP status codes:
 - `401` - Unauthorized
 - `404` - Not Found
 - `500` - Internal Server Error
+
+## Local sandbox (PayPal & S3/AWS simulation)
+
+If you want to run the backend end-to-end locally without real AWS or live PayPal, use these lightweight options:
+
+- PayPal: use PayPal Sandbox credentials (developer.paypal.com). Set `PAYPAL_MODE=sandbox`, `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` in your `.env`.
+- S3 / AWS: use an S3-compatible local service such as LocalStack or MinIO to simulate object storage. Set `S3_ENDPOINT` in `.env` and configure the AWS SDK to use it.
+
+Quick setups (PowerShell)
+
+1) PayPal sandbox
+
+ - Create a sandbox business account at https://developer.paypal.com.
+ - Copy the Sandbox Client ID & Secret into your `.env` as `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET`.
+
+2) LocalStack (recommended, simulates S3 & more)
+
+Install and run LocalStack (requires Docker):
+
+```powershell
+docker run --rm -it -p 4566:4566 -p 4571:4571 localstack/localstack
+```
+
+Create an S3 bucket (from another PowerShell):
+
+```powershell
+aws --endpoint-url=http://localhost:4566 s3 mb s3://postcard-dev
+```
+
+Set `.env` values to point to LocalStack:
+
+S3_ENDPOINT=http://localhost:4566
+AWS_ACCESS_KEY_ID=test
+AWS_SECRET_ACCESS_KEY=test
+S3_BUCKET=postcard-dev
+
+3) MinIO (alternative)
+
+ - Download MinIO and run it locally. Point `S3_ENDPOINT` at MinIO and set credentials.
+
+4) Configure AWS SDK in code (already done by `aws-sdk`):
+
+ - When `S3_ENDPOINT` is present, the code will usually pick it up if you pass it to the S3 client. Example (in code):
+
+```javascript
+// example S3 client creation
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3({
+   endpoint: process.env.S3_ENDPOINT,
+   s3ForcePathStyle: true, // required for minio/localstack
+   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+   region: process.env.AWS_REGION,
+});
+```
+
+5) PostcardMania / printer simulation
+
+ - You can test the PostcardMania flow without a real API key by setting `POSTCARD_MANIA_API_URL` to a local mock server and leaving `POSTCARD_MANIA_API_KEY` blank or set to `test`.
+ - Example: run a tiny JSON server that returns example responses for `/designs` and `/orders`.
+
+6) Environment example
+
+Copy `api/.env.example` to `api/.env` and update values for sandbox credentials and endpoints.
+
+```powershell
+cp api\.env.example api\.env
+# then edit api\.env with your sandbox creds
+```
+
+Notes
+
+- PayPal SDK in this project uses the REST SDK which is deprecated; for production migrate to the official PayPal Server SDKs.
+- When using LocalStack or MinIO, set `s3ForcePathStyle=true` in the AWS S3 client so path-style requests are used.
+

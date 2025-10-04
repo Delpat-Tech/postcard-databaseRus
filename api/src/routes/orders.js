@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Order = require("../models/Order");
 const { adminAuth } = require("../middleware/auth");
-const postcardManiaService = require("../services/postcardManiaService");
+const postcardManiaService = require("../services/postcard");
 
 // POST /api/orders - Create draft order
 router.post("/", async (req, res) => {

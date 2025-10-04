@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:4000/api";
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export interface Recipient {
   id: string;
@@ -39,11 +39,11 @@ export interface Order {
   };
   recipients: Recipient[];
   status:
-    | "draft"
-    | "pending_admin_approval"
-    | "submitted_to_pcm"
-    | "approved"
-    | "rejected";
+  | "draft"
+  | "pending_admin_approval"
+  | "submitted_to_pcm"
+  | "approved"
+  | "rejected";
   pcmOrderId?: string;
   pcmResponse?: any;
   createdAt: Date;
@@ -62,6 +62,9 @@ export interface Template {
 }
 
 interface OrderStore {
+  token: string | null;
+  adminLogin: (username: string, password: string) => Promise<void>;
+  adminLogout: () => void;
   currentOrder: Partial<Order>;
   orders: Order[];
   templates: Template[];
@@ -84,7 +87,8 @@ interface OrderStore {
   rejectOrder: (orderId: string) => Promise<Order>;
 }
 
-export const useOrderStore = create<OrderStore>((set, get) => ({
+export const useOrderStore = create<OrderStore>((set) => ({
+  token: typeof window !== "undefined" ? (localStorage.getItem("token") || null) : null,
   currentOrder: {},
   orders: [],
   templates: [],
@@ -105,15 +109,41 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
 
   setTemplates: (templates) => set({ templates }),
 
+  adminLogin: async (username, password) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      if (!res.ok) throw new Error("Invalid credentials");
+      const data = await res.json();
+      const token = data.token;
+      if (!token) throw new Error("No token returned");
+      localStorage.setItem("token", token);
+      set({ token, isLoading: false });
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : String(err), isLoading: false });
+      throw err;
+    }
+  },
+
+  adminLogout: () => {
+    localStorage.removeItem("token");
+    set({ token: null });
+  },
+
   toggleTemplateVisibility: async (templateId) => {
     try {
+      const token = (localStorage.getItem("token") || null);
       const response = await fetch(
         `${API_BASE_URL}/templates/${templateId}/public`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            // Add auth token here when implementing auth
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({ isPublic: true }), // Toggle logic would be handled by backend
         }
@@ -173,9 +203,10 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   fetchOrders: async () => {
     set({ isLoading: true, error: null });
     try {
+      const token = (localStorage.getItem("token") || null);
       const response = await fetch(`${API_BASE_URL}/orders`, {
         headers: {
-          // Add auth token here when implementing auth
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
       if (response.ok) {
@@ -225,10 +256,12 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   updateOrder: async (orderId, orderData) => {
     set({ isLoading: true, error: null });
     try {
+      const token = (localStorage.getItem("token") || null);
       const response = await fetch(`${API_BASE_URL}/orders/${orderId}/config`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(orderData),
       });
@@ -255,10 +288,12 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   submitOrder: async (orderId) => {
     set({ isLoading: true, error: null });
     try {
+      const token = (localStorage.getItem("token") || null);
       const response = await fetch(`${API_BASE_URL}/orders/${orderId}/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
@@ -284,16 +319,14 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   approveOrder: async (orderId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/orders/${orderId}/approve`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            // Add auth token here when implementing auth
-          },
-        }
-      );
+      const token = (localStorage.getItem("token") || null);
+      const response = await fetch(`${API_BASE_URL}/orders/${orderId}/approve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
 
       if (response.ok) {
         const order = await response.json();
@@ -317,11 +350,12 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   rejectOrder: async (orderId) => {
     set({ isLoading: true, error: null });
     try {
+      const token = (localStorage.getItem("token") || null);
       const response = await fetch(`${API_BASE_URL}/orders/${orderId}/reject`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Add auth token here when implementing auth
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 

@@ -1,9 +1,22 @@
-require("dotenv").config();
+const originalLog = console.log;
+const originalError = console.error;
+console.log = function (...args) {
+  const timestamp = new Date().toISOString();
+  originalLog(`[log ${timestamp}]`, ...args);
+};
+
+console.error = function (...args) {
+  const timestamp = new Date().toISOString();
+  originalError(`[error ${timestamp}]`, ...args);
+}
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-
+const morgan = require("morgan");
+const chalk = require("chalk");
 const authRoutes = require("./routes/auth");
 const templateRoutes = require("./routes/templates");
 const orderRoutes = require("./routes/orders");
@@ -12,8 +25,56 @@ const adminRoutes = require("./routes/admin");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const morganMiddleware = morgan(function (tokens, req, res) {
+  function statusColor() {
+    const status = tokens.status(req, res);
+    if (status >= 100 && status < 200) {
+      return chalk.grey.bold(tokens.status(req, res));
+    } else if (status >= 200 && status < 300) {
+      return chalk.green.bold(tokens.status(req, res));
+    } else if (status >= 300 && status < 400) {
+      return chalk.red.bold(tokens.status(req, res));
+    } else if (status >= 400 && status < 500) {
+      return chalk.blue.bold(tokens.status(req, res));
+    } else {
+      // Default color for status codes outside the expected range
+      return chalk.yellow.bold(tokens.status(req, res));
+    }
+  }
 
-app.use(cors({ origin: process.env.FRONTEND_URL || "*" }));
+  return [
+    chalk.hex("#34ace0").bold(tokens.method(req, res)),
+    statusColor(),
+    chalk.hex("#ff5252").bold(tokens.url(req, res)),
+    chalk.hex("#2ed573").bold(tokens["response-time"](req, res) + " ms"),
+    chalk.hex("#f78fb3").bold("@ " + tokens.date(req, res)),
+    chalk.yellow(tokens["remote-addr"](req, res)),
+    chalk.hex("#fffa65").bold("from " + tokens.referrer(req, res)),
+    chalk.hex("#1e90ff")(tokens["user-agent"](req, res)),
+    "\n",
+  ].join(" ");
+});
+
+app.use(morganMiddleware);
+
+// CORS: allow one or more frontend origins via FRONTEND_URL (comma-separated) or allow all with '*'
+const rawFrontends = process.env.FRONTEND_URL || "*";
+const allowedFrontends = rawFrontends.split(",").map((s) => s.trim());
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin (e.g., curl, mobile)
+      if (!origin) return callback(null, true);
+      if (allowedFrontends.includes("*") || allowedFrontends.includes(origin)) {
+        return callback(null, true);
+      }
+      // not allowed
+      return callback(new Error("Not allowed by CORS"));
+    },
+    // allow credentials if needed in future
+    credentials: true,
+  })
+);
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -29,10 +90,23 @@ app.get("/health", (req, res) => res.json({ ok: true, time: new Date() }));
 
 async function start() {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const uri = process.env.MONGO_URI;
+    if (!uri) throw new Error("MONGO_URI environment variable is not set");
+
+    try {
+      await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    } catch (err) {
+      console.error("Initial MongoDB connection failed:", err.message);
+      // common issue on Windows: DNS 'localhost' resolves to IPv6 ::1 while mongod listens on 127.0.0.1
+      if (uri.includes("localhost")) {
+        const fallback = uri.replace("localhost", "127.0.0.1");
+        console.log(`Retrying MongoDB connection with ${fallback}`);
+        await mongoose.connect(fallback);
+      } else {
+        throw err;
+      }
+    }
+
     console.log("MongoDB connected");
     app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
   } catch (err) {
