@@ -1,53 +1,67 @@
 const mongoose = require("mongoose");
 
+const RecipientSchema = new mongoose.Schema({
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  company: { type: String },
+  address1: { type: String, required: true },
+  address2: { type: String },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  zipCode: { type: String, required: true },
+  externalReferenceNumber: { type: String },
+});
+
+const ReturnAddressSchema = new mongoose.Schema({
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  company: { type: String },
+  address1: { type: String, required: true },
+  address2: { type: String },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  zipCode: { type: String, required: true },
+});
+
 const OrderSchema = new mongoose.Schema({
-  user: {
-    name: String,
-    email: String,
+  designType: {
+    type: String,
+    enum: ["single", "split", "drip"],
+    required: true,
   },
-  product: {
-    type: { type: String },
-    size: String,
-    quantity: Number,
-    priceCents: Number,
+  designId: { type: String },
+  designName: { type: String },
+  designSize: { type: String },
+  isCustomDesign: { type: Boolean, default: false },
+  mailClass: {
+    type: String,
+    enum: ["First Class", "Standard"],
+    default: "First Class",
   },
-  design: {
-    mode: String,
-    frontUrl: String,
-    backUrl: String,
-    pdfUrl: String,
+  externalReference: { type: String },
+  mailDate: { type: String, required: true },
+  brochureFold: {
+    type: String,
+    enum: ["Tri-Fold", "Bi-Fold"],
+    required: true,
   },
-  mailing: {
-    recipient: Object,
-    csvUrl: String,
+  returnAddress: ReturnAddressSchema,
+  recipients: [RecipientSchema],
+  status: {
+    type: String,
+    enum: [
+      "draft",
+      "pending_admin_approval",
+      "submitted_to_pcm",
+      "approved",
+      "rejected",
+    ],
+    default: "draft",
   },
-  proof: {
-    frontProofUrl: String,
-    backProofUrl: String,
-    approvedByUserAt: Date,
-  },
-  payment: {
-    provider: { type: String, default: "paypal" },
-    paypalOrderId: String,
-    status: {
-      type: String,
-      enum: ["pending", "paid", "refunded"],
-      default: "pending",
-    },
-    paidAt: Date,
-  },
-  admin: {
-    status: {
-      type: String,
-      enum: ["pending", "approved", "rejected"],
-      default: "pending",
-    },
-    approvedBy: String,
-    approvedAt: Date,
-    printerJobId: String,
-    printerResponse: Object,
-  },
+  pcmOrderId: { type: String },
+  pcmResponse: { type: Object },
   createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model("Order", OrderSchema);

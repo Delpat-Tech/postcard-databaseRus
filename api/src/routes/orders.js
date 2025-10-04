@@ -1,64 +1,160 @@
 const express = require("express");
 const router = express.Router();
 const Order = require("../models/Order");
-const {
-  generateProofForOrder,
-  createPaypalOrder,
-  capturePaypalOrder,
-} = require("../services/orderService");
+const { adminAuth } = require("../middleware/auth");
+const postcardManiaService = require("../services/postcardManiaService");
 
-// create order (before payment)
+// POST /api/orders - Create draft order
 router.post("/", async (req, res) => {
   try {
-    const order = new Order(req.body);
+    const orderData = {
+      ...req.body,
+      status: "draft",
+    };
+    const order = new Order(orderData);
     await order.save();
+    res.status(201).json(order);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
-    // generate proof (async) - we generate server-side canonical proof for uploaded PDFs
-    const proofs = await generateProofForOrder(order);
-    if (proofs) {
-      order.proof = proofs;
-      await order.save();
+// PUT /api/orders/:id/config - Update order configuration
+router.put("/:id/config", async (req, res) => {
+  try {
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, updatedAt: new Date() },
+      { new: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
     }
 
-    // create PayPal order (server-side)
-    const paypal = await createPaypalOrder(order);
-
-    res.json({ orderId: order._id, paypalOrder: paypal, proof: order.proof });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    res.json(order);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 
-// PayPal webhook: mark order paid (simple endpoint; you should validate via SDK/webhook verification in prod)
-router.post("/:id/paypal-complete", async (req, res) => {
-  const id = req.params.id;
-  const { paypalOrderId } = req.body;
+// POST /api/orders/:id/recipients - Add recipients to order
+router.post("/:id/recipients", async (req, res) => {
   try {
-    const order = await Order.findById(id);
-    if (!order) return res.status(404).json({ error: "Order not found" });
+    const { recipients } = req.body;
+    const order = await Order.findById(req.params.id);
 
-    // capture & verify via PayPal SDK
-    const capture = await capturePaypalOrder(paypalOrderId);
-    if (!capture || !capture.id)
-      return res.status(400).json({ error: "Failed to capture" });
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
 
-    order.payment.paypalOrderId = paypalOrderId;
-    order.payment.status = "paid";
-    order.payment.paidAt = new Date();
+    order.recipients = [...(order.recipients || []), ...recipients];
+    order.updatedAt = new Date();
     await order.save();
-    res.json({ ok: true, orderId: order._id });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+
+    res.json(order);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 
-// get order
+// POST /api/orders/:id/submit - Submit order for admin approval
+router.post("/:id/submit", async (req, res) => {
+  try {
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: "pending_admin_approval",
+        updatedAt: new Date(),
+      },
+      { new: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// GET /api/orders - Get all orders (admin only)
+router.get("/", adminAuth, async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/orders/:id - Get order by ID
 router.get("/:id", async (req, res) => {
-  const order = await Order.findById(req.params.id);
-  if (!order) return res.status(404).json({ error: "Not found" });
-  res.json(order);
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/orders/:id/approve - Approve order and send to PostcardMania (admin only)
+router.post("/:id/approve", adminAuth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    if (order.status !== "pending_admin_approval") {
+      return res.status(400).json({ error: "Order is not pending approval" });
+    }
+
+    // Format order data for PostcardMania
+    const pcmOrderData = postcardManiaService.formatOrderForPCM(order);
+
+    // Send to PostcardMania
+    const pcmResponse = await postcardManiaService.createOrder(pcmOrderData);
+
+    // Update order status
+    order.status = "submitted_to_pcm";
+    order.pcmOrderId = pcmResponse.id;
+    order.pcmResponse = pcmResponse;
+    order.updatedAt = new Date();
+    await order.save();
+
+    res.json(order);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// POST /api/orders/:id/reject - Reject order (admin only)
+router.post("/:id/reject", adminAuth, async (req, res) => {
+  try {
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: "rejected",
+        updatedAt: new Date(),
+      },
+      { new: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 module.exports = router;
