@@ -8,14 +8,21 @@ const postcardManiaService = require("../services/postcard");
 // GET /api/admin/designs/import - Import latest designs from PostcardMania
 router.get("/designs/import", adminAuth, async (req, res) => {
   try {
-    const pcmDesigns = await postcardManiaService.getAllDesigns();
+    const pcmDesigns = (await postcardManiaService.getAllDesigns()).results;
+    console.log(`Fetched ${pcmDesigns.length} designs from PostcardMania`);
+    console.log(pcmDesigns[0]);
 
-    // Process and save designs to local database
     const importedDesigns = [];
+
     for (const design of pcmDesigns) {
       const templateData = postcardManiaService.formatDesignForLocal(design);
+      console.log("Formatted design:", templateData);
 
-      // Check if design already exists
+      if (!templateData.pcmDesignId) {
+        console.warn("Skipping design without pcmDesignId:", design);
+        continue;
+      }
+
       const existingTemplate = await Template.findOne({
         pcmDesignId: templateData.pcmDesignId,
       });
@@ -25,10 +32,13 @@ router.get("/designs/import", adminAuth, async (req, res) => {
         await template.save();
         importedDesigns.push(template);
       } else {
-        // Update existing template
+        // update existing
         existingTemplate.name = templateData.name;
         existingTemplate.size = templateData.size;
-        existingTemplate.previewUrl = templateData.previewUrl;
+        existingTemplate.previewUrl =
+          templateData.previewUrl || existingTemplate.previewUrl;
+        existingTemplate.rawData =
+          templateData.rawData || existingTemplate.rawData;
         existingTemplate.updatedAt = new Date();
         await existingTemplate.save();
         importedDesigns.push(existingTemplate);
@@ -40,6 +50,7 @@ router.get("/designs/import", adminAuth, async (req, res) => {
       designs: importedDesigns,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 });

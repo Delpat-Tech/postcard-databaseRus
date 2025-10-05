@@ -199,11 +199,20 @@ export function Button({
 interface CardProps {
   children: React.ReactNode;
   className?: string;
+  onClick?: () => void;
 }
 
-export function Card({ children, className = "" }: CardProps) {
+export function Card({ children, className = "", onClick }: CardProps) {
+  const clickableClasses = onClick ? "cursor-pointer focus:outline-none" : "";
+
   return (
-    <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
+    <div
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
+      onClick={onClick}
+      className={`bg-white rounded-lg shadow-md p-6 ${clickableClasses} ${className}`}
+    >
       {children}
     </div>
   );

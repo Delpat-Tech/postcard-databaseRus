@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useOrderStore } from "../store/orderStore";
 
 export default function Navbar() {
+  const token = useOrderStore((s) => s.token);
   return (
     <nav className="bg-blue-600 text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
@@ -14,9 +16,11 @@ export default function Navbar() {
           <Link to="/order" className="hover:text-blue-200">
             Start Order
           </Link>
-          <Link to="/admin" className="hover:text-blue-200">
-            Admin
-          </Link>
+          {token && (
+            <Link to="/admin" className="hover:text-blue-200">
+              Admin
+            </Link>
+          )}
         </div>
       </div>
     </nav>

@@ -31,31 +31,33 @@ class PostcardService {
 
   async getAllDesigns() {
     await this.ensureAuth();
-    const r = await this.client.get('/designs');
+    const r = await this.client.get('/design');
     return r.data;
   }
 
   async getDesignById(id) {
     await this.ensureAuth();
-    const r = await this.client.get(`/designs/${id}`);
+    const r = await this.client.get(`/design/${id}`);
     return r.data;
   }
 
   async createNewDesign(designData) {
     await this.ensureAuth();
-    const r = await this.client.post('/designs', designData);
+    const r = await this.client.post('/design/custom', designData);
     return r.data;
   }
 
   async openDesignEditor(designId) {
     await this.ensureAuth();
-    const r = await this.client.post(`/designs/${designId}/editor`);
+    console.log(`/design/${designId}/edit`);
+
+    const r = await this.client.get(`/design/${designId}/edit`);
     return r.data;
   }
 
   async createOrder(orderData) {
     await this.ensureAuth();
-    const r = await this.client.post('/orders', orderData);
+    const r = await this.client.post('/order/postcard', orderData);
     return r.data;
   }
 
@@ -87,14 +89,13 @@ class PostcardService {
       external_reference: order.externalReference,
     };
   }
-
   formatDesignForLocal(design) {
     return {
-      pcmDesignId: design.id,
-      name: design.name,
-      size: design.size,
-      previewUrl: design.preview_url,
-      isPublic: false,
+      pcmDesignId: design.designID?.toString(),
+      name: design.friendlyName || `Design ${design.designID}`,
+      size: design.size?.label || "Unknown",
+      previewUrl: design.proofFront || design.proofBack || design.proofPDF || null,
+      rawData: design,
     };
   }
 

@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { Button } from "../components/FormComponents";
+import { useOrderStore } from "../store/orderStore";
 
 export default function Home() {
+  const token = useOrderStore((s) => s.token);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
@@ -19,11 +21,13 @@ export default function Home() {
             <Link to="/order">
               <Button className="text-lg px-8 py-3">Start Your Order</Button>
             </Link>
-            <Link to="/admin">
-              <Button variant="secondary" className="text-lg px-8 py-3">
-                Admin Panel
-              </Button>
-            </Link>
+            {token && (
+              <Link to="/admin">
+                <Button variant="secondary" className="text-lg px-8 py-3">
+                  Admin Panel
+                </Button>
+              </Link>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useOrderStore } from "../store/orderStore";
 import Stepper from "../components/Stepper";
 import OrderSummaryCard from "../components/OrderSummaryCard";
@@ -12,6 +13,7 @@ import {
   Button,
   Card,
 } from "../components/FormComponents";
+import { Link } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 
 export default function Order() {
@@ -22,7 +24,13 @@ export default function Order() {
     clearCurrentOrder,
     createOrder,
     submitOrder,
+    templates,
+    openTemplateEditor,
+    createNewDesign,
   } = useOrderStore();
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const selectedTemplate = templates.find((t) => t._id === currentOrder.templateId) || null;
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [approvalChecklist, setApprovalChecklist] = useState({
     imagesDisplayed: false,
@@ -146,88 +154,105 @@ export default function Order() {
 
                     <div className="space-y-6">
                       <div>
-                        <h3 className="text-lg font-medium mb-4">
-                          Design Type
-                        </h3>
-                        <div className="space-y-3">
-                          <Radio
-                            label="Single Design"
-                            name="designType"
-                            value="single"
-                            checked={currentOrder.designType === "single"}
-                            onChange={(value) =>
-                              setCurrentOrder({ designType: value as any })
-                            }
-                          />
-                          <Radio
-                            label="Split Testing"
-                            name="designType"
-                            value="split"
-                            checked={currentOrder.designType === "split"}
-                            onChange={(value) =>
-                              setCurrentOrder({ designType: value as any })
-                            }
-                          />
-                          <Radio
-                            label="Drip Campaign"
-                            name="designType"
-                            value="drip"
-                            checked={currentOrder.designType === "drip"}
-                            onChange={(value) =>
-                              setCurrentOrder({ designType: value as any })
-                            }
-                          />
-                        </div>
-                      </div>
+                        <h3 className="text-lg font-medium mb-4">Template Options</h3>
+                        {currentOrder.templateId || currentOrder.designName ? (
+                          <div className="mb-4 border rounded p-4 flex items-center gap-4">
+                            <div className="w-28 h-20 bg-gray-100 flex items-center justify-center overflow-hidden">
+                              {selectedTemplate?.previewUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={selectedTemplate.previewUrl} alt={selectedTemplate.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="text-sm text-gray-400">No preview</div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-semibold">{currentOrder.designName || selectedTemplate?.name || 'Selected template'}</div>
+                              <div className="text-sm text-gray-500">{currentOrder.designSize || selectedTemplate?.size}</div>
+                              <div className="mt-3 flex items-center gap-3">
+                                <button onClick={() => navigate('/templates')} className="px-3 py-2 border rounded">Change</button>
+                                <button onClick={async () => {
+                                  try {
+                                    const id = selectedTemplate?._id || currentOrder.templateId || '';
+                                    if (!id) throw new Error('No template id');
+                                    const url = await openTemplateEditor(id);
+                                    window.open(url, '_blank');
+                                  } catch (e) {
+                                    console.error(e);
+                                    alert(e instanceof Error ? e.message : String(e));
+                                  }
+                                }} className="px-3 py-2 bg-gray-100 border rounded">Personalize</button>
+                                <button onClick={() => {
+                                  // switch to a custom design flow: clear the selected template and mark as custom
+                                  setCurrentOrder({
+                                    templateId: undefined,
+                                    designId: undefined,
+                                    designName: undefined,
+                                    designSize: undefined,
+                                    isCustomDesign: true,
+                                  })
 
-                      <div>
-                        <h3 className="text-lg font-medium mb-4">
-                          Design Options
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Card className="border-2 border-dashed border-gray-300 hover:border-blue-500 cursor-pointer">
-                            <div className="text-center py-8">
-                              <svg
-                                className="mx-auto h-12 w-12 text-gray-400 mb-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                                />
-                              </svg>
-                              <h4 className="font-medium">Design Your Own</h4>
-                              <p className="text-sm text-gray-500">
-                                Upload your custom design
-                              </p>
+                                  setShowCreateForm((s) => {
+                                    const next = !s;
+                                    if (next) setCurrentOrder({ isCustomDesign: true });
+                                    return next;
+                                  });
+                                }} className="px-3 py-2 bg-white border rounded">Create Your Own</button>
+                              </div>
                             </div>
-                          </Card>
-                          <Card className="border-2 border-dashed border-gray-300 hover:border-blue-500 cursor-pointer">
-                            <div className="text-center py-8">
-                              <svg
-                                className="mx-auto h-12 w-12 text-gray-400 mb-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                />
-                              </svg>
-                              <h4 className="font-medium">Edit Template</h4>
-                              <p className="text-sm text-gray-500">
-                                Choose from PostcardMania templates
-                              </p>
-                            </div>
-                          </Card>
-                        </div>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Design Your Own toggle card */}
+                            <Card
+                              onClick={() => {
+                                setShowCreateForm((s) => {
+                                  const next = !s;
+                                  if (next) setCurrentOrder({ isCustomDesign: true });
+                                  return next;
+                                });
+                              }}
+                              className={"border-2 border-dashed border-gray-300 hover:border-blue-500" + (showCreateForm ? ' ring-2 ring-blue-300' : ' cursor-pointer')}
+                            >
+                              <div className="text-center py-8">
+                                <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                <h4 className="font-medium">Design Your Own</h4>
+                                <p className="text-sm text-gray-500">Upload your custom design</p>
+                              </div>
+                            </Card>
+
+                            {/* Either show inline create form or link to templates */}
+                            {showCreateForm ? (
+                              <Card className="p-4">
+                                <h4 className="font-medium mb-2">Create New Design</h4>
+                                <NewDesignForm onCreate={async (design) => {
+                                  try {
+                                    const { template, url } = await createNewDesign(design);
+                                    setCurrentOrder({ templateId: template._id, designId: template.pcmDesignId || template._id, designName: template.name, designSize: template.size, isCustomDesign: false });
+                                    setShowCreateForm(false);
+                                    if (url) window.location.href = url;
+                                  } catch (err) {
+                                    console.error(err);
+                                    alert(err instanceof Error ? err.message : String(err));
+                                  }
+                                }} />
+                              </Card>
+                            ) : (
+                              <Link to="/templates">
+                                <Card className="border-2 border-dashed border-gray-300 hover:border-blue-500 cursor-pointer">
+                                  <div className="text-center py-8">
+                                    <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <h4 className="font-medium">Edit Template</h4>
+                                    <p className="text-sm text-gray-500">Choose from PostcardMania templates</p>
+                                  </div>
+                                </Card>
+                              </Link>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -434,60 +459,60 @@ export default function Order() {
                           label="First Name"
                           name="firstName"
                           value=""
-                          onChange={() => {}}
+                          onChange={() => { }}
                           required
                         />
                         <Input
                           label="Last Name"
                           name="lastName"
                           value=""
-                          onChange={() => {}}
+                          onChange={() => { }}
                           required
                         />
                         <Input
                           label="Company"
                           name="company"
                           value=""
-                          onChange={() => {}}
+                          onChange={() => { }}
                         />
                         <Input
                           label="External Reference Number"
                           name="externalReferenceNumber"
                           value=""
-                          onChange={() => {}}
+                          onChange={() => { }}
                         />
                         <Input
                           label="Address 1"
                           name="address1"
                           value=""
-                          onChange={() => {}}
+                          onChange={() => { }}
                           required
                         />
                         <Input
                           label="Address 2"
                           name="address2"
                           value=""
-                          onChange={() => {}}
+                          onChange={() => { }}
                         />
                         <Input
                           label="City"
                           name="city"
                           value=""
-                          onChange={() => {}}
+                          onChange={() => { }}
                           required
                         />
                         <Input
                           label="State"
                           name="state"
                           value=""
-                          onChange={() => {}}
+                          onChange={() => { }}
                           required
                         />
                         <Input
                           label="Zip Code"
                           name="zipCode"
                           value=""
-                          onChange={() => {}}
+                          onChange={() => { }}
                           required
                         />
                         <div className="md:col-span-2">
@@ -630,5 +655,45 @@ export default function Order() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Small inline form used on the Order page to create a new design via the backend
+function NewDesignForm({ onCreate }: { onCreate?: (payload: { name: string; size: string }) => void }) {
+  const [name, setName] = useState("");
+  const [size, setSize] = useState("46");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const allowedSizes = ["46", "58", "68", "611", "811", "BRO"];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return alert("Please enter a name for the design");
+    if (!allowedSizes.includes(size)) return alert("Please select a valid size");
+    setIsSubmitting(true);
+    try {
+      if (onCreate) await onCreate({ name: name.trim(), size });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-2">
+      <Input label="Name" name="designName" value={name} onChange={setName} required />
+      <label className="block text-sm font-medium text-gray-700">Size</label>
+      <select value={size} onChange={(e) => setSize(e.target.value)} className="w-full px-3 py-2 border rounded">
+        {allowedSizes.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+      <div>
+        <Button type="submit" disabled={isSubmitting} className="mt-2">
+          Create & Edit
+        </Button>
+      </div>
+    </form>
   );
 }

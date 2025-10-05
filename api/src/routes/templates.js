@@ -41,14 +41,29 @@ router.get("/:id", async (req, res) => {
 router.post("/new", async (req, res) => {
   try {
     const { designData } = req.body;
-    const pcmDesign = await postcardManiaService.createNewDesign(designData);
 
-    // Save to local database
-    const templateData = postcardManiaService.formatDesignForLocal(pcmDesign);
+    // Create new design in PostcardMania (service returns an object with at least designID and possibly url)
+    const pcmResponse = await postcardManiaService.createNewDesign(designData);
+
+    // Try to extract designID and editor URL
+    const designID = pcmResponse.designID
+    const editorUrl = pcmResponse?.url || (designID ? `https://portal.pcmintegrations.com/integrated/embed/editor/${designID}` : null);
+
+    // Build a template record using available data. Keep rawData to preserve full response.
+    const templateData = {
+      pcmDesignId: String(designID),
+      name: (designData?.name || pcmResponse?.friendlyName || pcmResponse?.name || "New Design") + ` (${new Date().toISOString().slice(0, 10)})`,
+      size: designData?.size || pcmResponse?.size || "",
+      previewUrl: pcmResponse?.previewUrl || pcmResponse?.preview_url || null,
+      isPublic: true,
+      rawData: pcmResponse,
+    };
+
     const template = new Template(templateData);
     await template.save();
 
-    res.status(201).json(template);
+    // Return both saved template and editor url so the frontend can redirect
+    res.status(201).json({ template, url: editorUrl });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
