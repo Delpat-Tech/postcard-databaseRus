@@ -1,4 +1,5 @@
 const axios = require('axios');
+const Template = require("../models/Template");
 
 class PostcardService {
   constructor() {
@@ -48,11 +49,34 @@ class PostcardService {
   }
 
   async openDesignEditor(designId) {
-    await this.ensureAuth();
-    console.log(`/design/${designId}/edit`);
+    try {
+      await this.ensureAuth();
+      console.log(`/design/${designId}/edit`);
 
-    const r = await this.client.get(`/design/${designId}/edit`);
-    return r.data;
+      const r = await this.client.get(`/design/${designId}/edit?duplicate=true&mode=embed`);
+      const newdesign = await this.getDesignById(r.data.designID); // fixed
+      const template = new Template(this.formatDesignForLocal(newdesign)); // fixed
+      template.isPublic = true;
+      let savedtemplate = await template.save();
+      savedtemplate = savedtemplate.toObject(); // convert Mongoose doc to plain object
+      savedtemplate.url = r.data.url;
+      return savedtemplate;
+
+    } catch (error) {
+      console.error(`Failed to open design editor for designId ${designId}:`, error);
+      throw error;
+    }
+  }
+  async openDesignMeEditor(designId) {
+    try {
+      await this.ensureAuth();
+      console.log(`/design/${designId}/edit`);
+      const r = await this.client.get(`/design/${designId}/edit?mode=embed`);
+      return r.data
+    } catch (error) {
+      console.error(`Failed to open design editor for designId ${designId}:`, error);
+      throw error;
+    }
   }
 
   async createOrder(orderData) {

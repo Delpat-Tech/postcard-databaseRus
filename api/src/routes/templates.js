@@ -69,7 +69,7 @@ router.post("/new", async (req, res) => {
   }
 });
 
-// POST /api/templates/:id/edit - Open design editor via PostcardMania
+// POST /api/templates/:id/edit - personalise editor via PostcardMania
 router.post("/:id/edit", async (req, res) => {
   try {
     const template = await Template.findById(req.params.id);
@@ -78,6 +78,23 @@ router.post("/:id/edit", async (req, res) => {
     }
 
     const editorData = await postcardManiaService.openDesignEditor(
+      template.pcmDesignId
+    );
+    res.json(editorData);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// POST /api/templates/:id/edit - Open design editor via PostcardMania
+router.post("/:id/editme", async (req, res) => {
+  try {
+    const template = await Template.findById(req.params.id);
+    if (!template) {
+      return res.status(404).json({ error: "Template not found" });
+    }
+
+    const editorData = await postcardManiaService.openDesignMeEditor(
       template.pcmDesignId
     );
     res.json(editorData);

@@ -60,6 +60,7 @@ export interface Template {
   isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
+  url?: string;
 }
 
 interface OrderStore {
@@ -81,7 +82,8 @@ interface OrderStore {
   clearCurrentOrder: () => void;
   fetchTemplates: () => Promise<void>;
   fetchAllTemplates: () => Promise<void>;
-  openTemplateEditor: (templateId: string) => Promise<string>;
+  openTemplateEditor: (templateId: string) => Promise<Template>;
+  openTemplateSimpleEditor: (templateId: string) => Promise<string>;
   createNewDesign: (payload: { name: string; size: string }) => Promise<{ template: any; url?: string }>;
   fetchOrders: () => Promise<void>;
   importDesigns: () => Promise<Template[]>;
@@ -261,10 +263,10 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     }
   },
 
-  openTemplateEditor: async (templateId) => {
+  openTemplateSimpleEditor: async (templateId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch(`${API_BASE_URL}/templates/${templateId}/edit`, {
+      const response = await fetch(`${API_BASE_URL}/templates/${templateId}/editme`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
@@ -279,7 +281,24 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       throw error;
     }
   },
-
+  openTemplateEditor: async (templateId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch(`${API_BASE_URL}/templates/${templateId}/edit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error("Failed to open template editor");
+      const data = await response.json();
+      const url = data?.url || data?.editorUrl || data?.redirectUrl;
+      if (!url) throw new Error("No editor URL returned");
+      set({ isLoading: false });
+      return data;
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : String(error), isLoading: false });
+      throw error;
+    }
+  },
   // Create a new design via backend (which calls PostcardMania), save as template, make public and select it
   createNewDesign: async (payload: { name: string; size: string }) => {
     set({ isLoading: true, error: null });

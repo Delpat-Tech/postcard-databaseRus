@@ -14,8 +14,12 @@ export default function Templates() {
   const openEditor = async (templateId: string) => {
     try {
       setLoadingEditor(templateId);
-      const url = await useOrderStore.getState().openTemplateEditor(templateId);
-      window.open(url, "_blank");
+      const template = await useOrderStore.getState().openTemplateEditor(templateId);
+
+      setCurrentOrder({ templateId: template._id, designId: template.pcmDesignId || template._id, designName: template.name, designSize: template.size, isCustomDesign: true });
+      navigate('/order');
+
+      window.open(template.url, "_blank");
     } catch (err) {
       console.error(err);
       alert(err instanceof Error ? err.message : String(err));

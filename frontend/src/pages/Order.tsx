@@ -25,6 +25,7 @@ export default function Order() {
     createOrder,
     submitOrder,
     templates,
+    openTemplateSimpleEditor,
     openTemplateEditor,
     createNewDesign,
   } = useOrderStore();
@@ -174,8 +175,17 @@ export default function Order() {
                                   try {
                                     const id = selectedTemplate?._id || currentOrder.templateId || '';
                                     if (!id) throw new Error('No template id');
-                                    const url = await openTemplateEditor(id);
-                                    window.open(url, '_blank');
+                                    if (currentOrder.isCustomDesign === true) {
+                                      const url = await openTemplateSimpleEditor(id);
+                                      window.open(url, '_blank');
+
+                                    }
+                                    else {
+                                      const template = await openTemplateEditor(id);
+                                      setCurrentOrder({ templateId: template._id, designId: template.pcmDesignId || template._id, designName: template.name, designSize: template.size, isCustomDesign: true });
+                                      navigate('/order');
+                                      window.open(template.url, '_blank');
+                                    }
                                   } catch (e) {
                                     console.error(e);
                                     alert(e instanceof Error ? e.message : String(e));
