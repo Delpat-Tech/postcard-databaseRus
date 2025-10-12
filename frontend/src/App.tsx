@@ -18,7 +18,7 @@ export default function App() {
         <Route path="/order" element={<Order />} />
         <Route path="/templates" element={<Templates />} />
         <Route path="/design/:id" element={<Design />} />
-        <Route path="/proof" element={<Proof />} />
+        {/* <Route path="/proof" element={<Proof />} /> */}
         <Route path="/upload" element={<Upload />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/admin" element={<Admin />} />

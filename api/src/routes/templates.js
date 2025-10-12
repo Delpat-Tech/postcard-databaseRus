@@ -3,7 +3,6 @@ const router = express.Router();
 const Template = require("../models/Template");
 const { adminAuth } = require("../middleware/auth");
 const postcardManiaService = require("../services/postcard");
-
 // GET /api/templates/public - Get all public templates
 router.get("/public", async (req, res) => {
   try {
@@ -13,6 +12,43 @@ router.get("/public", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+function validateProofBody(req, res, next) {
+  console.log(req.body);
+
+  const { templateId, front, back, size, recipient } = req.body;
+
+  // Check mandatory fields
+  if (!size) {
+    return res.status(400).json({ error: "Field 'size' is required" });
+  }
+
+  if (!recipient) {
+    return res.status(400).json({ error: "Field 'recipient' is required" });
+  }
+
+  // Check either templateId OR front+back
+  if (!templateId && !(front && back)) {
+    return res.status(400).json({
+      error: "You must provide either 'templateId' or both 'front' and 'back' for proof generation",
+    });
+  }
+
+  next();
+}
+// POST /api/templates/proof - generate proof for template
+router.post("/proof", validateProofBody, async (req, res) => {
+  console.log(req.body);
+  try {
+    const { format, templateId, front, back, size, recipient } = req.body;
+
+    const proof = await postcardManiaService.generateProof(format, templateId, front, back, size, recipient)
+    res.json(proof); // { front, back }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
 
 // GET /api/templates - Get all templates (admin only)
 router.get("/", adminAuth, async (req, res) => {

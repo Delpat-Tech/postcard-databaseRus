@@ -91,6 +91,76 @@ class PostcardService {
     return r.data;
   }
 
+  async generateProof(format = "jpg", templateId, front, back, size, recipient) {
+    try {
+      await this.ensureAuth();
+
+      if (!recipient) throw new Error("No recipient found for proof generation");
+      if (!size) throw new Error("Size is required for proof generation");
+      if (!templateId && !(front && back)) {
+        throw new Error("You must provide either templateId or front+back for proof generation");
+      }
+
+      let proofPayload = {
+        size,
+        format,
+        addressing: {
+          font: "Bradley Hand",
+          fontColor: "Black",
+          exceptionalAddressingType: "resident",
+        },
+      };
+
+      try {
+        if (templateId) {
+          let template = await Template.findById(templateId);
+          if (!template) throw new Error("Template not found");
+          proofPayload.designID = Number(template.pcmDesignId);
+        } else {
+          proofPayload.front = front;
+          proofPayload.back = back;
+        }
+      } catch (templateError) {
+        console.error("Error fetching template:", templateError);
+        throw new Error("Failed to fetch template for proof generation");
+      }
+
+      try {
+        proofPayload.returnAddress = recipient.returnAddress || null;
+        proofPayload.recipient = recipient.recipient || {
+          company: recipient.company || "",
+          firstName: recipient.firstName,
+          lastName: recipient.lastName,
+          address: recipient.address1,
+          address2: recipient.address2 || " ",
+          city: recipient.city,
+          state: recipient.state,
+          zipCode: recipient.zipCode,
+          variables: recipient.variables || [],
+        };
+      } catch (recipientError) {
+        console.error("Error preparing recipient data:", recipientError);
+        throw new Error("Failed to prepare recipient for proof generation");
+      }
+
+      try {
+        const response = await this.client.post(
+          "/design/generate-proof/postcard",
+          proofPayload
+        );
+        return response.data; // { front, back }
+      } catch (apiError) {
+        console.log("Error generating proof from API:", apiError);
+        throw new Error("Failed to generate proof from PostcardMania API");
+      }
+
+    } catch (error) {
+      console.error("generateProof error:", error);
+      throw error; // Let the caller handle/display the error
+    }
+  }
+
+
   formatOrderForPCM(order) {
     return {
       design_id: order.designId,

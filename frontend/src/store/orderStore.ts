@@ -16,29 +16,63 @@ export interface Recipient {
   externalReferenceNumber?: string;
 }
 
+export interface Address {
+  firstName: string;
+  lastName: string;
+  company?: string;
+  address: string;
+  address2?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+}
+
+export interface DesignVariable {
+  key: string;
+  value: string;
+}
+
+export interface AddressingConfig {
+  font?: "Bradley Hand" | "Blackjack" | "FG Cathies Hand" | "Crappy Dan" | "Dakota" | "Jenna Sue" | "Reenie Beanie";
+  fontColor?: "Black" | "Green" | "Blue";
+  exceptionalAddressingType?: "resident" | "occupant" | "business";
+  extRefNbr?: string;
+}
+
+export interface Recipient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  company?: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  externalReferenceNumber?: string;
+  variables?: DesignVariable[];
+}
+
 export interface Order {
   _id: string;
   templateId?: string;
   designType: "single" | "split" | "drip";
-  designId?: string;
+  designId?: number | string; // API allows integer
   designName?: string;
-  designSize?: string;
+  designSize?: string; // e.g., 46, 68, 611, etc.
   isCustomDesign: boolean;
-  mailClass: "First Class" | "Standard";
+  mailClass: "FirstClass" | "Standard";
   externalReference?: string;
-  mailDate: string;
+  mailDate: string; // YYYY-MM-DD
   brochureFold: "Tri-Fold" | "Bi-Fold";
-  returnAddress?: {
-    firstName: string;
-    lastName: string;
-    company?: string;
-    address1: string;
-    address2?: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  };
+  returnAddress?: Address;
   recipients: Recipient[];
+  addons?: { addon: "UV" | "Livestamping" }[] | null;
+  front?: string | null; // Raw HTML or URL to HTML/PDF/JPG/PNG
+  back?: string | null;  // Raw HTML or URL to HTML/PDF/JPG/PNG
+  addressing?: AddressingConfig;
+  globalDesignVariables?: DesignVariable[];
+  qrCodeID?: number;
   status:
   | "draft"
   | "pending_admin_approval"
@@ -49,6 +83,8 @@ export interface Order {
   pcmResponse?: any;
   createdAt: Date;
   updatedAt: Date;
+  frontPdf?: File;
+  backPdf?: File;
 }
 
 export interface Template {
@@ -82,6 +118,14 @@ interface OrderStore {
   clearCurrentOrder: () => void;
   fetchTemplates: () => Promise<void>;
   fetchAllTemplates: () => Promise<void>;
+  generateProofByTemplate: (
+    size: string,
+    recipient: Recipient,
+    format: "pdf" | "jpg",
+    templateId?: string,
+    front?: string,
+    back?: string,
+  ) => Promise<{ front: string; back: string }>;
   openTemplateEditor: (templateId: string) => Promise<Template>;
   openTemplateSimpleEditor: (templateId: string) => Promise<string>;
   createNewDesign: (payload: { name: string; size: string }) => Promise<{ template: any; url?: string }>;
@@ -299,6 +343,45 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       throw error;
     }
   },
+  generateProofByTemplate: async (
+    size: string,
+    recipient: Recipient,
+    format: "pdf" | "jpg" = "pdf",
+    templateId?: string,
+    front?: string,
+    back?: string,
+  ) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const payload: any = { format, recipient, size };
+
+      if (templateId) {
+        payload.templateId = templateId;
+      } else {
+        payload.front = front || null;
+        payload.back = back || null;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/templates/proof`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error("Failed to generate proof");
+
+      const data = await response.json();
+      return { front: data.front, back: data.back };
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : String(error) });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+
   // Create a new design via backend (which calls PostcardMania), save as template, make public and select it
   createNewDesign: async (payload: { name: string; size: string }) => {
     set({ isLoading: true, error: null });
