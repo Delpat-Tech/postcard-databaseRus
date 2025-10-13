@@ -27,7 +27,7 @@ const OrderSchema = new mongoose.Schema({
   designType: {
     type: String,
     enum: ["single", "split", "drip"],
-    required: true,
+    default: 'single'
   },
   designId: { type: String },
   designName: { type: String },
@@ -35,15 +35,15 @@ const OrderSchema = new mongoose.Schema({
   isCustomDesign: { type: Boolean, default: false },
   mailClass: {
     type: String,
-    enum: ["First Class", "Standard"],
-    default: "First Class",
+    enum: ["FirstClass", "Standard"],
+    default: "FirstClass",
   },
   externalReference: { type: String },
   mailDate: { type: String, required: true },
   brochureFold: {
     type: String,
     enum: ["Tri-Fold", "Bi-Fold"],
-    required: true,
+    default: "Bi-Fold",
   },
   returnAddress: ReturnAddressSchema,
   recipients: [RecipientSchema],

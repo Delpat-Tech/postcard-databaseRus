@@ -94,7 +94,7 @@ async function start() {
     if (!uri) throw new Error("MONGO_URI environment variable is not set");
 
     try {
-      await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+      await mongoose.connect(uri);
     } catch (err) {
       console.error("Initial MongoDB connection failed:", err.message);
       // common issue on Windows: DNS 'localhost' resolves to IPv6 ::1 while mongod listens on 127.0.0.1

@@ -13,7 +13,6 @@ router.get("/public", async (req, res) => {
   }
 });
 function validateProofBody(req, res, next) {
-  console.log(req.body);
 
   const { templateId, front, back, size, recipient } = req.body;
 
@@ -37,7 +36,6 @@ function validateProofBody(req, res, next) {
 }
 // POST /api/templates/proof - generate proof for template
 router.post("/proof", validateProofBody, async (req, res) => {
-  console.log(req.body);
   try {
     const { format, templateId, front, back, size, recipient } = req.body;
 
