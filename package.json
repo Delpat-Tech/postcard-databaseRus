@@ -11,7 +11,7 @@
     "reset-seed": "node api/scripts/resetSeed.js",
     "dev:frontend": "cd frontend && vite --config vite.config.ts",
     "build:frontend": "cd frontend && vite build --config vite.config.ts",
-    "preview:frontend": "cd frontend && vite preview --config vite.config.ts"
+    "preview:frontend": "cd frontend && vite preview --config vite.config.ts --host 0.0.0.0 --port 5173"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^8.9.2",
