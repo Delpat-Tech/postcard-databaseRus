@@ -1,4 +1,4 @@
-import { useOrderStore } from "../store/orderStore"
+import { useOrderStore, type Address } from "../store/orderStore";
 
 // Pricing definitions
 type PricingRule = {
@@ -39,43 +39,93 @@ export default function OrderSummaryCard() {
   const pricePerPiece = getPrice(size, mailClass, recipientCount);
   const total = Number((pricePerPiece * recipientCount).toFixed(2));
 
+  const returnAddress: Address = currentOrder.returnAddress || {
+    firstName: "",
+    lastName: "",
+    company: "",
+    address1: "",
+    address2: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    phone: "",
+    email: "",
+  };
+  const userDetails = currentOrder.userDet || {};
+
   return (
-    <div className="bg-gray-50 rounded-lg p-6">
+    <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 shadow-sm">
       <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
 
-      <div className="space-y-3">
+      <div className="space-y-3 text-sm text-gray-700">
         <div>
           <span className="font-medium">Design Type:</span>
           <span className="ml-2 capitalize">{currentOrder.designType || "Not selected"}</span>
         </div>
+
         {currentOrder.designName && (
           <div>
             <span className="font-medium">Design:</span>
             <span className="ml-2">{currentOrder.designName}</span>
           </div>
         )}
+
         <div>
           <span className="font-medium">Mail Class:</span>
           <span className="ml-2">{mailClass}</span>
         </div>
+
         <div>
           <span className="font-medium">Size:</span>
-          <span className="ml-2">{pricingTable.find(p => p.sizeKey === size)?.sizeLabel
-          }</span>
+          <span className="ml-2">
+            {pricingTable.find(p => p.sizeKey === size)?.sizeLabel || size}
+          </span>
         </div>
+
         <div>
           <span className="font-medium">Recipients:</span>
           <span className="ml-2">{recipientCount}</span>
         </div>
+
         <div>
           <span className="font-medium">Price per Piece:</span>
           <span className="ml-2">${pricePerPiece.toFixed(2)}</span>
         </div>
+
         <div>
           <span className="font-medium">Total Order:</span>
           <span className="ml-2 font-bold">${total}</span>
         </div>
       </div>
+
+      {/* ===== User Details ===== */}
+      {(userDetails.email || userDetails.phone) && (
+        <div className="mt-6 border-t border-gray-200 pt-4">
+          <h4 className="text-md font-semibold mb-2">Your Details</h4>
+          <div className="text-sm text-gray-700 space-y-1">
+            {userDetails.email && <div><strong>Email:</strong> {userDetails.email}</div>}
+            {userDetails.phone && <div><strong>Phone:</strong> {userDetails.phone}</div>}
+          </div>
+        </div>
+      )}
+
+      {/* ===== Return Address ===== */}
+      {returnAddress.firstName && (
+        <div className="mt-6 border-t border-gray-200 pt-4">
+          <h4 className="text-md font-semibold mb-2">Return Address</h4>
+          <div className="text-sm text-gray-700 space-y-1">
+            <div>
+              {returnAddress.firstName} {returnAddress.lastName}
+              {returnAddress.company && `, ${returnAddress.company}`}
+            </div>
+            <div>{returnAddress.address1}</div>
+            {returnAddress.address2 && <div>{returnAddress.address2}</div>}
+            <div>
+              {returnAddress.city}, {returnAddress.state} {returnAddress.zipCode}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

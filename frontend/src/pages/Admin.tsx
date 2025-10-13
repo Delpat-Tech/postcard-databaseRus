@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useOrderStore } from "../store/orderStore";
 import { Button, Card } from "../components/FormComponents";
+import Swal from "sweetalert2";
 
 export default function Admin() {
   const {
@@ -18,6 +19,28 @@ export default function Admin() {
   } = useOrderStore();
   const [templateFilter, setTemplateFilter] = React.useState<"all" | "public" | "private">("all");
   const [activeTab, setActiveTab] = useState<"orders" | "templates">("orders");
+  const [sortOption, setSortOption] = useState<"newest" | "oldest" | "pending" | "approved" | "rejected">("newest");
+  const [sortedOrders, setSortedOrders] = useState(orders);
+  React.useEffect(() => {
+    // Apply sorting whenever orders or sortOption changes
+    const sorted = [...orders].sort((a, b) => {
+      switch (sortOption) {
+        case "newest":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "oldest":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "pending":
+          return a.status === "pending_admin_approval" ? -1 : 1;
+        case "approved":
+          return a.status === "approved" ? -1 : 1;
+        case "rejected":
+          return a.status === "rejected" ? -1 : 1;
+        default:
+          return 0;
+      }
+    });
+    setSortedOrders(sorted);
+  }, [orders, sortOption]);
 
   // Load data on component mount (only if authenticated)
   React.useEffect(() => {
@@ -165,95 +188,167 @@ export default function Admin() {
             <>
               {activeTab === "orders" && (
                 <div>
-                  <h2 className="text-2xl font-semibold mb-6">Orders Management</h2>
-                  {orders.length === 0 ? (
+                  {/* Orders Header: Refresh + Sort */}
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-semibold">Orders Management</h2>
+
+                    <div className="flex items-center space-x-3">
+                      {/* Sort Dropdown */}
+                      <select
+                        value={sortOption}
+                        onChange={(e) => setSortOption(e.target.value)}
+                        className="px-3 py-1 border rounded text-sm"
+                      >
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="pending">Pending Approval</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+
+                      {/* Refresh Button */}
+                      <Button
+                        onClick={async () => {
+                          try {
+                            await fetchOrders();
+                            alert("Orders refreshed");
+                          } catch (e) {
+                            console.error(e);
+                            alert("Failed to refresh orders");
+                          }
+                        }}
+                        variant="secondary"
+                        className="text-sm"
+                      >
+                        Refresh
+                      </Button>
+                    </div>
+                  </div>
+
+                  {sortedOrders.length === 0 ? (
                     <Card className="text-center py-12">
                       <p className="text-gray-500">No orders found</p>
                     </Card>
                   ) : (
                     <div className="space-y-4">
-                      {orders.map((order) => (
-                        <Card
-                          key={order._id}
-                          className="hover:shadow-lg transition-shadow"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
+                      {sortedOrders.map((order) => (
+                        <Card key={order._id} className="hover:shadow-lg transition-shadow">
+                          <div className="flex flex-col md:flex-row justify-between items-start space-y-4 md:space-y-0 md:space-x-4">
+
+                            {/* Order Info */}
+                            <div className="flex-1 space-y-2">
                               <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-lg font-semibold">
-                                  Order #{order._id}
-                                </h3>
-                                <span
-                                  className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                                    order.status
-                                  )}`}
-                                >
+                                <h3 className="text-lg font-semibold">Order #{order._id}</h3>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                                   {order.status.toUpperCase()}
                                 </span>
                               </div>
 
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                                 <div>
-                                  <p>
-                                    <span className="font-medium">
-                                      Design Type:
-                                    </span>{" "}
-                                    {order.designType}
-                                  </p>
-                                  <p>
-                                    <span className="font-medium">Mail Class:</span>{" "}
-                                    {order.mailClass}
-                                  </p>
-                                  <p>
-                                    <span className="font-medium">
-                                      Brochure Fold:
-                                    </span>{" "}
-                                    {order.brochureFold}
-                                  </p>
+                                  <p><span className="font-medium">Design Type:</span> {order.designType}</p>
+                                  {order.designName && <p><span className="font-medium">Design:</span> {order.designName}</p>}
+                                  <p><span className="font-medium">Mail Class:</span> {order.mailClass}</p>
+                                  <p><span className="font-medium">Brochure Fold:</span> {order.brochureFold}</p>
                                 </div>
+
                                 <div>
-                                  <p>
-                                    <span className="font-medium">Recipients:</span>{" "}
-                                    {order.recipients?.length || 0}
-                                  </p>
-                                  <p>
-                                    <span className="font-medium">Mail Date:</span>{" "}
-                                    {order.mailDate || "Not set"}
-                                  </p>
-                                  <p>
-                                    <span className="font-medium">Created:</span>{" "}
-                                    {formatDate(order.createdAt)}
-                                  </p>
+                                  <p><span className="font-medium">Recipients:</span> {order.recipients?.length || 0}</p>
+                                  <p><span className="font-medium">Mail Date:</span> {order.mailDate || "Not set"}</p>
+                                  <p><span className="font-medium">Created:</span> {formatDate(order.createdAt)}</p>
                                 </div>
                               </div>
 
+                              {/* External Reference */}
                               {order.externalReference && (
                                 <p className="text-sm text-gray-500 mt-2">
-                                  <span className="font-medium">
-                                    External Reference:
-                                  </span>{" "}
-                                  {order.externalReference}
+                                  <span className="font-medium">External Reference:</span> {order.externalReference}
                                 </p>
                               )}
-                            </div>
 
-                            <div className="flex space-x-2 ml-4">
+                              {/* User Details */}
+                              {order.userDet && (
+                                <div className="mt-2 text-sm">
+                                  <p><span className="font-medium">User Phone:</span> {order.userDet.phone || "N/A"}</p>
+                                  <p><span className="font-medium">User Email:</span> {order.userDet.email || "N/A"}</p>
+                                </div>
+                              )}
+
+                              {/* Return Address */}
+                              {order.returnAddress && (
+                                <div className="mt-2 text-sm">
+                                  <p className="font-medium">Return Address:</p>
+                                  <p>{order.returnAddress.firstName} {order.returnAddress.lastName}</p>
+                                  {order.returnAddress.company && <p>{order.returnAddress.company}</p>}
+                                  <p>{order.returnAddress.address1}{order.returnAddress.address2 ? `, ${order.returnAddress.address2}` : ""}</p>
+                                  <p>{order.returnAddress.city}, {order.returnAddress.state} {order.returnAddress.zipCode}</p>
+                                  {order.returnAddress.phone && <p>Phone: {order.returnAddress.phone}</p>}
+                                  {order.returnAddress.email && <p>Email: {order.returnAddress.email}</p>}
+                                </div>
+                              )}
+
+                              {/* Recipients List */}
+                              {order.recipients && order.recipients.length > 0 && (
+                                <div className="mt-2 text-sm">
+                                  <p className="font-medium">Recipients:</p>
+                                  <ul className="list-disc ml-5">
+                                    {order.recipients.map((r) => (
+                                      <li key={r.id}>
+                                        {r.firstName} {r.lastName} {r.company ? `(${r.company})` : ""}
+                                        , {r.address1}{r.address2 ? `, ${r.address2}` : ""}, {r.city}, {r.state} {r.zipCode}
+                                        {r.externalReferenceNumber ? ` - Ref: ${r.externalReferenceNumber}` : ""}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            {/* Proof Buttons */}
+                            {(order.frontproof || order.backproof) && (
+                              <div className="mt-2 flex space-x-2">
+                                {order.frontproof && (
+                                  <Button
+                                    onClick={() => {
+                                      Swal.fire({
+                                        title: "Front Proof",
+                                        imageUrl: order.frontproof,
+                                        imageAlt: "Front Proof",
+                                        imageWidth: 400,
+                                        imageHeight: 400,
+                                      });
+                                    }}
+                                    className="bg-blue-600 hover:bg-blue-700"
+                                  >
+                                    View Front Proof
+                                  </Button>
+                                )}
+                                {order.backproof && (
+                                  <Button
+                                    onClick={() => {
+                                      Swal.fire({
+                                        title: "Back Proof",
+                                        imageUrl: order.backproof,
+                                        imageAlt: "Back Proof",
+                                        imageWidth: 400,
+                                        imageHeight: 400,
+                                      });
+                                    }}
+                                    className="bg-blue-600 hover:bg-blue-700"
+                                  >
+                                    View Back Proof
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Admin Actions */}
+                            <div className="flex flex-col space-y-2 md:ml-4">
                               {order.status === "pending_admin_approval" && (
                                 <>
-                                  <Button
-                                    onClick={() =>
-                                      handleOrderAction(order._id, "approve")
-                                    }
-                                    className="bg-green-600 hover:bg-green-700"
-                                  >
+                                  <Button onClick={() => handleOrderAction(order._id, "approve")} className="bg-green-600 hover:bg-green-700">
                                     Approve
                                   </Button>
-                                  <Button
-                                    onClick={() =>
-                                      handleOrderAction(order._id, "reject")
-                                    }
-                                    variant="danger"
-                                  >
+                                  <Button onClick={() => handleOrderAction(order._id, "reject")} variant="danger">
                                     Reject
                                   </Button>
                                 </>
@@ -262,6 +357,7 @@ export default function Admin() {
                           </div>
                         </Card>
                       ))}
+
                     </div>
                   )}
                 </div>

@@ -86,10 +86,13 @@ export default function Order() {
   const isChecklistComplete = Object.values(approvalChecklist).every(Boolean);
 
   const handleGenerateProof = useCallback(async () => {
+
+
+    if (!(currentStep === 4)) return;
     if (proofFront && proofBack) return;
 
     if (!currentOrder.recipients?.length) return;
-
+    if (!currentOrder.designSize) return;
     setIsProofLoading(true);
     setProofError(false);
 
@@ -105,6 +108,8 @@ export default function Order() {
 
       setProofFront(front);
       setProofBack(back);
+      setCurrentOrder({ frontproof: front, backproof: back });
+
     } catch (err) {
       console.error("Proof generation failed:", err);
       setProofError(true);

@@ -3,8 +3,14 @@ import { create } from "zustand";
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-export interface Recipient {
-  id: string;
+// ===== Design Variables =====
+export interface DesignVariable {
+  key: string;
+  value: string;
+}
+
+// ===== Recipient & Addressing =====
+export interface Address {
   firstName: string;
   lastName: string;
   company?: string;
@@ -13,32 +19,25 @@ export interface Recipient {
   city: string;
   state: string;
   zipCode: string;
-  externalReferenceNumber?: string;
-}
-
-export interface Address {
-  firstName: string;
-  lastName: string;
-  company?: string;
-  address: string;
-  address2?: string;
-  city: string;
-  state: string;
-  zipCode: string;
-}
-
-export interface DesignVariable {
-  key: string;
-  value: string;
+  phone?: string;
+  email?: string;
 }
 
 export interface AddressingConfig {
-  font?: "Bradley Hand" | "Blackjack" | "FG Cathies Hand" | "Crappy Dan" | "Dakota" | "Jenna Sue" | "Reenie Beanie";
+  font?:
+  | "Bradley Hand"
+  | "Blackjack"
+  | "FG Cathies Hand"
+  | "Crappy Dan"
+  | "Dakota"
+  | "Jenna Sue"
+  | "Reenie Beanie";
   fontColor?: "Black" | "Green" | "Blue";
   exceptionalAddressingType?: "resident" | "occupant" | "business";
   extRefNbr?: string;
 }
 
+// ===== Recipient =====
 export interface Recipient {
   id: string;
   firstName: string;
@@ -53,23 +52,27 @@ export interface Recipient {
   variables?: DesignVariable[];
 }
 
+// ===== Order =====
 export interface Order {
   _id: string;
   templateId?: string;
   designType: "single" | "split" | "drip";
-  designId?: number | string; // API allows integer
+  designId?: number | string;
   designName?: string;
-  designSize?: string; // e.g., 46, 68, 611, etc.
+  designSize?: string; // e.g., 46, 68, 611
   isCustomDesign: boolean;
   mailClass: "FirstClass" | "Standard";
   externalReference?: string;
   mailDate: string; // YYYY-MM-DD
   brochureFold: "Tri-Fold" | "Bi-Fold";
   returnAddress?: Address;
+  userDet?: Pick<Address, "phone" | "email">;
   recipients: Recipient[];
   addons?: { addon: "UV" | "Livestamping" }[] | null;
-  front?: string | null; // Raw HTML or URL to HTML/PDF/JPG/PNG
-  back?: string | null;  // Raw HTML or URL to HTML/PDF/JPG/PNG
+  front?: string | null; // URL or raw HTML
+  back?: string | null;  // URL or raw HTML
+  frontPdf?: File;
+  backPdf?: File;
   addressing?: AddressingConfig;
   globalDesignVariables?: DesignVariable[];
   qrCodeID?: number;
@@ -83,21 +86,23 @@ export interface Order {
   pcmResponse?: any;
   createdAt: Date;
   updatedAt: Date;
-  frontPdf?: File;
-  backPdf?: File;
+  frontproof?: string;
+  backproof?: string;
 }
 
+// ===== Template =====
 export interface Template {
   _id: string;
   pcmDesignId: string;
   name: string;
   size: string;
   previewUrl: string;
+  url?: string;
   isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
-  url?: string;
 }
+
 
 interface OrderStore {
   token: string | null;
@@ -362,6 +367,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
         payload.front = front || null;
         payload.back = back || null;
       }
+      console.log(payload);
 
       const response = await fetch(`${API_BASE_URL}/templates/proof`, {
         method: "POST",
@@ -411,6 +417,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const token = (localStorage.getItem("token") || null);
+
       const response = await fetch(`${API_BASE_URL}/orders`, {
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -423,6 +430,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
         throw new Error("Failed to fetch orders");
       }
     } catch (error) {
+      localStorage.removeItem("token")
       set({
         error: error instanceof Error ? error.message : "Unknown error",
         isLoading: false,
@@ -432,33 +440,37 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
 
   createOrder: async (orderData) => {
     set({ isLoading: true, error: null });
+
     try {
       const response = await fetch(`${API_BASE_URL}/orders`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderData),
       });
 
-      if (response.ok) {
-        const order = await response.json();
-        set((state) => ({
-          orders: [order, ...state.orders],
-          isLoading: false,
-        }));
-        return order;
-      } else {
-        throw new Error("Failed to create order");
+      const data = await response.json().catch(() => ({})); // handle empty body safely
+
+      if (!response.ok) {
+        // Prefer backend-provided message
+        const message =
+          data?.error || data?.message || `Request failed with status ${response.status}`;
+        throw new Error(message);
       }
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : "Unknown error",
+
+      // success
+      set((state) => ({
+        orders: [data, ...state.orders],
         isLoading: false,
-      });
-      throw error;
+      }));
+
+      return data;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      set({ error: message, isLoading: false });
+      throw new Error(message);
     }
   },
+
 
   updateOrder: async (orderId, orderData) => {
     set({ isLoading: true, error: null });
