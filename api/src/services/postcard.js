@@ -16,18 +16,17 @@ class PostcardService {
     if (!this.apiKey || !this.apiSecret) throw new Error('PostcardMania credentials missing');
     const resp = await this.client.post('/auth/login', { apiKey: this.apiKey, apiSecret: this.apiSecret });
     const data = resp.data || {};
-    const token = data.token || data.accessToken || data.access_token;
-    const expiresIn = data.expiresIn || data.expires_in || data.expires || null;
+    const token = data.token;
     if (!token) throw new Error('No token from PostcardMania auth');
     this.token = token;
-    this.tokenExpiry = expiresIn ? Date.now() + Number(expiresIn) * 1000 : Date.now() + 3600 * 1000;
+    this.tokenExpiry = data.expires;
     this.client.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
     this.client.defaults.headers.common['Content-Type'] = 'application/json';
     return this.token;
   }
 
   async ensureAuth() {
-    if (!this.token || Date.now() >= this.tokenExpiry - 60000) await this.authenticate();
+    await this.authenticate();
   }
 
   async getAllDesigns() {

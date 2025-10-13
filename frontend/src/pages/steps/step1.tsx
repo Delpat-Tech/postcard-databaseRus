@@ -53,6 +53,7 @@ export default function Step1UploadAndSelect() {
             alert("Invalid HTML format");
             return;
         }
+
         setCurrentOrder({ [side]: value });
     };
 
@@ -153,25 +154,6 @@ export default function Step1UploadAndSelect() {
                                     className="px-3 py-2 bg-gray-100 border rounded"
                                 >
                                     Personalize
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setCurrentOrder({
-                                            templateId: undefined,
-                                            designId: undefined,
-                                            designName: undefined,
-                                            designSize: undefined,
-                                            isCustomDesign: true,
-                                        });
-                                        setShowCreateForm((s) => {
-                                            const next = !s;
-                                            if (next) setCurrentOrder({ isCustomDesign: true });
-                                            return next;
-                                        });
-                                    }}
-                                    className="px-3 py-2 bg-white border rounded"
-                                >
-                                    Create Your Own
                                 </button>
                             </div>
                         </div>

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Order = require("../models/Order");
+const Tempalate = require("../models/Template");
 const { adminAuth } = require("../middleware/auth");
 const postcardManiaService = require("../services/postcard");
 
@@ -106,8 +107,16 @@ router.post("/:id/submit", async (req, res) => {
       { status: "pending_admin_approval", updatedAt: new Date() },
       { new: true }
     );
-
     if (!order) return res.status(404).json({ error: "Order not found" });
+    const template = await Tempalate.findOneAndUpdate({ pcmDesignId: order.designId },
+      {
+        previewUrl: order.frontproof,
+        isPublic: false
+      },
+      {
+        new: true
+      })
+
 
     res.json(order);
   } catch (error) {

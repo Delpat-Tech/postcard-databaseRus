@@ -86,12 +86,11 @@ export default function Order() {
   const isChecklistComplete = Object.values(approvalChecklist).every(Boolean);
 
   const handleGenerateProof = useCallback(async () => {
+    console.log(currentOrder);
 
-
-    if (!(currentStep === 4)) return;
     if (proofFront && proofBack) return;
 
-    if (!currentOrder.recipients?.length) return;
+    if (currentOrder.recipients?.length === 0) return;
     if (!currentOrder.designSize) return;
     setIsProofLoading(true);
     setProofError(false);
