@@ -10,8 +10,8 @@
     "seed-dummy": "cd api && node scripts/seedDummyData.js",
     "reset-seed": "node api/scripts/resetSeed.js",
     "dev:frontend": "cd frontend && vite --config vite.config.ts",
-    "build:frontend": "vite build --config frontend/vite.config.ts",
-    "preview:frontend": "vite preview --config frontend/vite.config.ts"
+    "build:frontend": "cd frontend && vite build --config vite.config.ts",
+    "preview:frontend": "cd frontend && vite preview --config vite.config.ts"
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^8.9.2",
