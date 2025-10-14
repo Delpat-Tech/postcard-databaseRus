@@ -55,27 +55,62 @@ export interface Recipient {
 // ===== Order =====
 export interface Order {
   _id: string;
+
+  /** Product type: postcard or letter */
+  productType: "postcard" | "letter";
+
+  /** Template / design details */
   templateId?: string;
   designType: "single" | "split" | "drip";
   designId?: number | string;
   designName?: string;
-  designSize?: string; // e.g., 46, 68, 611
+  designSize?: string; // e.g., 46, 68, 611, etc.
   isCustomDesign: boolean;
+
+  /** Common mailing fields */
   mailClass: "FirstClass" | "Standard";
   externalReference?: string;
   mailDate: string; // YYYY-MM-DD
-  brochureFold: "Tri-Fold" | "Bi-Fold";
+
+  /** For brochures / foldable mailers */
+  brochureFold?: "Tri-Fold" | "Bi-Fold";
+
+  /** Addressing & contact info */
   returnAddress?: Address;
   userDet?: Pick<Address, "phone" | "email">;
   recipients: Recipient[];
+
+  /** Optional add-ons */
   addons?: { addon: "UV" | "Livestamping" }[] | null;
+
+  /** Creative / content */
   front?: string | null; // URL or raw HTML
   back?: string | null;  // URL or raw HTML
   frontPdf?: File;
   backPdf?: File;
+
+  /** Optional proofing */
+  frontproof?: string | null;
+  backproof?: string | null;
+
+  /** Addressing configuration */
   addressing?: AddressingConfig;
   globalDesignVariables?: DesignVariable[];
   qrCodeID?: number;
+
+  /** Letter-specific fields */
+  /** Only applicable if productType === "letter" */
+  fileUrl?: string | null; // Optional URL to external HTML or PDF file
+  color?: boolean; // Print in color
+  printOnBothSides?: boolean; // Duplex printing
+  insertAddressingPage?: boolean; // Include addressing page
+  envelopeType?: "fullWindow" | "doubleWindow" | "Regular" | "BiFold";
+  envelopeID?: number | null; // If Custom envelope is selected
+  font?: "Bradley Hand" | "Blackjack" | "FG Cathies Hand" | "Crappy Dan" | "Dakota" | "Jenna Sue" | "Reenie Beanie";
+  fontColor?: "Black" | "Green" | "Blue";
+  exceptionalAddressingType?: "resident" | "occupant" | "business";
+
+  /** Workflow & system metadata */
   status:
   | "draft"
   | "pending_admin_approval"
@@ -86,9 +121,8 @@ export interface Order {
   pcmResponse?: any;
   createdAt: Date;
   updatedAt: Date;
-  frontproof?: string;
-  backproof?: string;
 }
+
 
 // ===== Template =====
 export interface Template {
@@ -127,10 +161,20 @@ interface OrderStore {
     size: string,
     recipient: Recipient,
     format: "pdf" | "jpg",
+    productType: "postcard" | "letter",
     templateId?: string,
     front?: string,
     back?: string,
   ) => Promise<{ front: string; back: string }>;
+  generateletterProofByTemplate: (
+    recipient: Recipient,
+    font: string,
+    type: string,
+    fontColor: string,
+    color: boolean,
+    templateId?: string,
+    front?: string,
+  ) => Promise<{ front: string }>;
   openTemplateEditor: (templateId: string) => Promise<Template>;
   openTemplateSimpleEditor: (templateId: string) => Promise<string>;
   createNewDesign: (payload: { name: string; size: string }) => Promise<{ template: any; url?: string }>;
@@ -387,6 +431,44 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     }
   },
 
+  generateletterProofByTemplate: async (
+    recipient: Recipient,
+    font: string,
+    type: string,
+    fontColor: string,
+    color: boolean,
+    templateId?: string,
+    front?: string,
+  ) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const payload: any = { recipient, color, envelope: { font, type, fontColor } };
+
+      if (templateId) {
+        payload.templateId = templateId;
+      } else {
+        payload.letter = front || null;
+      }
+      console.log(payload);
+
+      const response = await fetch(`${API_BASE_URL}/templates/proofletter`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error("Failed to generate proof");
+
+      const data = await response.json();
+      return { front: data.pdf };
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : String(error) });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
   // Create a new design via backend (which calls PostcardMania), save as template, make public and select it
   createNewDesign: async (payload: { name: string; size: string }) => {

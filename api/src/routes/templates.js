@@ -46,6 +46,17 @@ router.post("/proof", validateProofBody, async (req, res) => {
   }
 });
 
+router.post("/proofletter", async (req, res) => {
+
+  try {
+    const { letter, templateId, envelope, color, recipient } = req.body;
+
+    const proof = await postcardManiaService.generateProofletter(templateId, letter, envelope, color, recipient)
+    res.json(proof); // { front, back }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 
 // GET /api/templates - Get all templates (admin only)

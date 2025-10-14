@@ -1,5 +1,6 @@
 import { Button } from "./FormComponents";
 import Swal from "sweetalert2";
+
 interface ProofPreviewProps {
   front?: string | null;
   back?: string | null;
@@ -17,15 +18,38 @@ export default function ProofPreview({
 }: ProofPreviewProps) {
   const showProofModal = (url: string, title: string) => {
     if (!url) return;
-    Swal.fire({
-      title: title || "Proof Preview",
-      imageUrl: url,
-      imageAlt: title || "Proof",
-      showCloseButton: true,
-      showConfirmButton: false,
-      width: "80%",
-    });
+
+    const isPdf =
+      url.toLowerCase().endsWith(".pdf") ||
+      url.startsWith("data:application/pdf");
+
+    if (isPdf) {
+      // PDF preview inside SweetAlert using iframe
+      Swal.fire({
+        title: title || "Proof Preview (PDF)",
+        html: `
+          <iframe
+            src="${url}"
+            style="width:100%;height:80vh;border:none;border-radius:8px;"
+          ></iframe>
+        `,
+        width: "90%",
+        showCloseButton: true,
+        showConfirmButton: false,
+      });
+    } else {
+      // Image preview as before
+      Swal.fire({
+        title: title || "Proof Preview",
+        imageUrl: url,
+        imageAlt: title || "Proof",
+        showCloseButton: true,
+        showConfirmButton: false,
+        width: "80%",
+      });
+    }
   };
+
   if (isLoading) {
     return (
       <div className="bg-gray-50 rounded-lg p-8 text-center">
@@ -57,7 +81,9 @@ export default function ProofPreview({
           We were unable to generate your proof.
         </h3>
         <p className="text-red-600 mb-4">
-          Please make sure you have selected premade design template or specified size and uploaded both front and back pictures for your custom design. Please try again or contact support if the problem persists.
+          Please make sure you have selected a valid design or uploaded both
+          sides for your custom design if postcard and fontside if letter. Try again or contact support if the
+          issue persists.
         </p>
         {onRegenerate && (
           <Button onClick={onRegenerate} className="mr-4">
@@ -65,7 +91,10 @@ export default function ProofPreview({
           </Button>
         )}
         <p className="text-sm text-red-500 mt-2">
-          Need help? Contact our support team at support@proofapprove.com
+          Need help? Contact our support team at{" "}
+          <a href="mailto:support@proofapprove.com" className="underline">
+            support@proofapprove.com
+          </a>
         </p>
       </div>
     );

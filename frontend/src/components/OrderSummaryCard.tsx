@@ -34,8 +34,8 @@ export default function OrderSummaryCard() {
   const { currentOrder } = useOrderStore();
   const recipientCount = currentOrder.recipients?.length || 0;
 
-  const size = currentOrder.designSize || "46";
-  const mailClass: "FirstClass" | "Standard" = currentOrder.mailClass || "FirstClass";
+  const size = currentOrder.designSize;
+  const mailClass: "FirstClass" | "Standard" = currentOrder.mailClass;
   const pricePerPiece = getPrice(size, mailClass, recipientCount);
   const total = Number((pricePerPiece * recipientCount).toFixed(2));
 

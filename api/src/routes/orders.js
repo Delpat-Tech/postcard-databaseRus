@@ -108,7 +108,7 @@ router.post("/:id/submit", async (req, res) => {
       { new: true }
     );
     if (!order) return res.status(404).json({ error: "Order not found" });
-    const template = await Tempalate.findOneAndUpdate({ pcmDesignId: order.designId },
+    const template = await Tempalate.findOneAndUpdate({ pcmDesignId: order.designId, isCustomDesign: true },
       {
         previewUrl: order.frontproof,
         isPublic: false

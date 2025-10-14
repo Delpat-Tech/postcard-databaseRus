@@ -2,21 +2,33 @@ import { useState, useEffect, useCallback } from "react";
 import { useOrderStore, type Order } from "../store/orderStore";
 import Stepper from "../components/Stepper";
 import OrderSummaryCard from "../components/OrderSummaryCard";
+import Step0 from "./steps/step0";
 import Step1Upload from "./steps/step1";
+import Step1Letter from "./steps/stepletter";
 import Step2Config from "./steps/step2";
 import Step3Recipients from "./steps/step3";
 import Step4Review from "./steps/step4";
 import { Button, Card } from "../components/FormComponents";
 
 // Pricing definitions
-const pricingTable = [
-  { sizeKey: "46", sizeLabel: "4.25 x 6", mailClass: "FirstClass" },
-  { sizeKey: "68", sizeLabel: "6 x 8.5", mailClass: "Standard" },
-  { sizeKey: "611", sizeLabel: "6 x 11", mailClass: "Standard" },
-  { sizeKey: "811", sizeLabel: "8.5 x 11 Letters", mailClass: "Standard" },
-  { sizeKey: "BRO", sizeLabel: "8.5 x 11 Yellow Letters", mailClass: "Standard" },
-];
+type PricingRule = {
+  sizeKey: string;
+  sizeLabel: string;
+  mailClass: "FirstClass" | "Standard";
+  one: number;
+  twoTo99: number;
+  hundredUp: number;
+};
 
+const pricingTable: PricingRule[] = [
+  { sizeKey: "46", sizeLabel: "4.25 x 6", mailClass: "FirstClass", one: 1.99, twoTo99: 0.99, hundredUp: 0.89 },
+  { sizeKey: "68", sizeLabel: "6 x 8.5", mailClass: "Standard", one: 2.15, twoTo99: 1.14, hundredUp: 1.04 },
+  { sizeKey: "68", sizeLabel: "6 x 8.5", mailClass: "FirstClass", one: 2.35, twoTo99: 1.24, hundredUp: 1.10 },
+  { sizeKey: "611", sizeLabel: "6 x 11", mailClass: "Standard", one: 2.55, twoTo99: 1.41, hundredUp: 1.31 },
+  { sizeKey: "611", sizeLabel: "6 x 11", mailClass: "FirstClass", one: 2.75, twoTo99: 1.51, hundredUp: 1.41 },
+  { sizeKey: "811", sizeLabel: "8.5 x 11 Letters", mailClass: "Standard", one: 2.95, twoTo99: 1.57, hundredUp: 1.47 },
+  { sizeKey: "811", sizeLabel: "8.5 x 11 Letters", mailClass: "FirstClass", one: 3.25, twoTo99: 1.77, hundredUp: 1.67 },
+];
 export default function Order() {
   const {
     currentOrder,
@@ -26,9 +38,11 @@ export default function Order() {
     createOrder,
     submitOrder,
     generateProofByTemplate,
+    generateletterProofByTemplate,
   } = useOrderStore();
 
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0); // start at 0
+  const [productType, setProductType] = useState<"postcard" | "letter" | null>(null);
   const [approvalChecklist, setApprovalChecklist] = useState({
     imagesDisplayed: false,
     noSpellingErrors: false,
@@ -96,18 +110,36 @@ export default function Order() {
     setProofError(false);
 
     try {
-      const { front, back } = await generateProofByTemplate(
-        currentOrder.designSize,
-        currentOrder.recipients[0],
-        "jpg",
-        currentOrder.templateId,
-        currentOrder.front,
-        currentOrder.back
-      );
+      let proof;
+      if (productType === "postcard") {
 
-      setProofFront(front);
-      setProofBack(back);
-      setCurrentOrder({ frontproof: front, backproof: back });
+        proof = await generateProofByTemplate(
+          currentOrder.designSize,
+          currentOrder.recipients[0],
+          "jpg",
+          currentOrder.templateId,
+          currentOrder.front,
+          currentOrder.back
+        );
+        setProofFront(proof.front);
+        setProofBack(proof.back);
+        setCurrentOrder({ frontproof: proof.front, backproof: proof.back });
+
+      }
+      else if (productType === "letter") {
+        proof = await generateletterProofByTemplate(
+          currentOrder.recipients[0],
+          currentOrder.font,
+          currentOrder.envelopeType,
+          currentOrder.fontColor,
+          currentOrder.color,
+          currentOrder.templateId,
+          currentOrder.front
+        );
+        setProofFront(proof.front);
+
+        setCurrentOrder({ frontproof: proof.front });
+      }
 
     } catch (err) {
       console.error("Proof generation failed:", err);
@@ -127,12 +159,27 @@ export default function Order() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-center mb-8">Create Your Postcard Order</h1>
-        <Stepper currentStep={currentStep} totalSteps={4} stepNames={stepNames} />
+        <Stepper
+          currentStep={currentStep}
+          totalSteps={productType ? 4 : 5}
+          stepNames={productType ? stepNames : ["Select Product", ...stepNames]}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
           <div className="lg:col-span-2">
             <Card>
-              {currentStep === 1 && <Step1Upload />}
+              {currentStep === 0 && (
+                <Step0
+                  onSelect={(type) => {
+                    setProductType(type);
+                    setCurrentStep(1);
+                    setCurrentOrder({ productType: type, mailClass: "FirstClass", designSize: pricingTable.find(p => p.mailClass === "FirstClass" && p.sizeKey === (type === "postcard" ? "46" : "811"))?.sizeKey });
+                  }}
+                />
+              )}
+
+              {productType === "postcard" && currentStep === 1 && <Step1Upload />}
+              {productType === "letter" && currentStep === 1 && <Step1Letter />}
               {currentStep === 2 && (
                 <Step2Config
                   currentOrder={currentOrder}
