@@ -184,7 +184,7 @@ class PostcardService {
           proofPayload.letter = letter;
         }
       } catch (templateError) {
-        console.error("Error fetching template:", templateError);
+        console.error("Error fetching template:", templateError?.message);
         throw new Error("Failed to fetch template for proof generation");
       }
 
@@ -202,7 +202,7 @@ class PostcardService {
           variables: recipient.variables || [],
         };
       } catch (recipientError) {
-        console.error("Error preparing recipient data:", recipientError);
+        console.error("Error preparing recipient data:", recipientError?.message);
         throw new Error("Failed to prepare recipient for proof generation");
       }
 
@@ -213,12 +213,12 @@ class PostcardService {
         );
         return response.data; // { front, back }
       } catch (apiError) {
-        console.log("Error generating proof from API:", apiError);
+        console.log("Error generating proof from API:", apiError?.message);
         throw new Error("Failed to generate proof from PostcardMania API");
       }
 
     } catch (error) {
-      console.error("generateProof error:", error);
+      console.error("generateProof error:", error?.message);
       throw error; // Let the caller handle/display the error
     }
   }

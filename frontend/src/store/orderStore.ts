@@ -121,6 +121,7 @@ export interface Order {
   pcmResponse?: any;
   createdAt: Date;
   updatedAt: Date;
+  totalPrice: number
 }
 
 

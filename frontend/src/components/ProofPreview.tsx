@@ -7,6 +7,7 @@ interface ProofPreviewProps {
   isLoading?: boolean;
   hasError?: boolean;
   onRegenerate?: () => void;
+  productType: "postcard" | "letter";
 }
 
 export default function ProofPreview({
@@ -15,7 +16,9 @@ export default function ProofPreview({
   isLoading = false,
   hasError = false,
   onRegenerate,
+  productType
 }: ProofPreviewProps) {
+
   const showProofModal = (url: string, title: string) => {
     if (!url) return;
 
@@ -108,10 +111,11 @@ export default function ProofPreview({
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             {front && (
               <Button
-                onClick={() => showProofModal(front, "Front Proof")}
+
+                onClick={() => showProofModal(front, productType === "letter" ? "Letter Proof" : "Front Proof")}
                 className="w-full md:w-1/2"
               >
-                View Front Proof
+                {productType === "letter" ? "View Letter Proof" : "View Front Proof"}
               </Button>
             )}
             {back && (
@@ -145,11 +149,13 @@ export default function ProofPreview({
           </div>
         )}
       </div>
-      {onRegenerate && (
-        <Button onClick={onRegenerate} variant="secondary">
-          Regenerate Proof
-        </Button>
-      )}
-    </div>
+      {
+        onRegenerate && (
+          <Button onClick={onRegenerate} variant="secondary">
+            Regenerate Proof
+          </Button>
+        )
+      }
+    </div >
   );
 }

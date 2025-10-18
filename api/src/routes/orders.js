@@ -5,13 +5,48 @@ const Tempalate = require("../models/Template");
 const { adminAuth } = require("../middleware/auth");
 const postcardManiaService = require("../services/postcard");
 
-// ✅ POST /api/orders - Create draft order with custom validation
+// --- Pricing Definitions (Moved from Frontend) ---
+
+// Note: Removed sizeLabel as it's not needed for backend calculation, 
+// and adjusted the structure for plain JavaScript.
+const pricingTable = [
+  { sizeKey: "46", mailClass: "FirstClass", one: 1.99, twoTo99: 0.99, hundredUp: 0.89 },
+  { sizeKey: "68", mailClass: "Standard", one: 2.15, twoTo99: 1.14, hundredUp: 1.04 },
+  { sizeKey: "68", mailClass: "FirstClass", one: 2.35, twoTo99: 1.24, hundredUp: 1.10 },
+  { sizeKey: "611", mailClass: "Standard", one: 2.55, twoTo99: 1.41, hundredUp: 1.31 },
+  { sizeKey: "611", mailClass: "FirstClass", one: 2.75, twoTo99: 1.51, hundredUp: 1.41 },
+  { sizeKey: "811", mailClass: "Standard", one: 2.95, twoTo99: 1.57, hundredUp: 1.47 },
+  { sizeKey: "811", mailClass: "FirstClass", one: 3.25, twoTo99: 1.77, hundredUp: 1.67 },
+];
+
+/**
+ * Calculates the price per piece based on size, mail class, and quantity.
+ * @param {string} size - The design size key (e.g., "46").
+ * @param {('FirstClass'|'Standard')} mailClass - The mailing class.
+ * @param {number} quantity - The number of recipients/pieces.
+ * @returns {number} The price per piece.
+ */
+function calculatePricePerPiece(size, mailClass, quantity) {
+  // Find the matching pricing rule
+  const rule = pricingTable.find(r => r.sizeKey === size && r.mailClass === mailClass);
+  if (!rule) return 0;
+
+  // Determine the price tier
+  if (quantity === 1) return rule.one;
+  if (quantity >= 2 && quantity <= 99) return rule.twoTo99;
+  if (quantity >= 100) return rule.hundredUp;
+
+  return 0; // Default case
+}
+
+// ✅ POST /api/orders - Create draft order with custom validation and pricing
 router.post("/", async (req, res) => {
   try {
     const data = req.body;
-    console.log(data);
+    console.log("Incoming order data:", data);
 
-    // 🧩 Step 1: Custom validation checks
+    // --- Step 1: Custom Validation Checks ---
+
     if (!data.mailDate) {
       return res.status(400).json({ error: "Mail date is required." });
     }
@@ -29,6 +64,7 @@ router.post("/", async (req, res) => {
     if (!Array.isArray(data.recipients) || data.recipients.length === 0) {
       return res.status(400).json({ error: "At least one recipient is required." });
     }
+    const recipientCount = data.recipients.length;
 
     // Validate recipients one by one
     for (const [index, r] of data.recipients.entries()) {
@@ -49,8 +85,29 @@ router.post("/", async (req, res) => {
       }
     }
 
-    // 🧾 Step 2: Proceed to save
-    const orderData = { ...data, status: "draft" };
+    // --- Step 2: Calculate Pricing ---
+    const designSize = data.designSize;
+    const mailClass = data.mailClass;
+
+    if (!designSize || !mailClass) {
+      // Should have been caught by frontend/design validation, but for safety:
+      return res.status(400).json({ error: "Design size and mail class are required for pricing calculation." });
+    }
+
+    const pricePerPiece = calculatePricePerPiece(designSize, mailClass, recipientCount);
+    const totalPrice = Number((pricePerPiece * recipientCount).toFixed(2));
+
+    if (totalPrice === 0 && recipientCount > 0) {
+      console.warn(`Pricing rule not found for Size: ${designSize}, Class: ${mailClass}. Setting total to 0.`);
+    }
+
+    // --- Step 3: Proceed to save ---
+    const orderData = {
+      ...data,
+      status: "draft",
+      pricePerPiece: pricePerPiece,
+      totalPrice: totalPrice
+    };
 
     const order = new Order(orderData);
     await order.save();
@@ -62,6 +119,7 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // PUT /api/orders/:id/config - Update order configuration
 router.put("/:id/config", async (req, res) => {
   try {

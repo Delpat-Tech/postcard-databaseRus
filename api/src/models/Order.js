@@ -167,6 +167,8 @@ const OrderSchema = new mongoose.Schema(
       ],
       default: "draft",
     },
+    pricePerPiece: { type: Number, default: 0 },
+    totalPrice: { type: Number, default: 0 },
     pcmOrderId: { type: String },
     pcmResponse: { type: Object },
   },

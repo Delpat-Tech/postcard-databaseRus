@@ -1,5 +1,5 @@
 import { useOrderStore, type Address } from "../store/orderStore";
-
+import { useEffect } from "react";
 // Pricing definitions
 type PricingRule = {
   sizeKey: string;
@@ -18,8 +18,6 @@ const pricingTable: PricingRule[] = [
   { sizeKey: "611", sizeLabel: "6 x 11", mailClass: "FirstClass", one: 2.75, twoTo99: 1.51, hundredUp: 1.41 },
   { sizeKey: "811", sizeLabel: "8.5 x 11 Letters", mailClass: "Standard", one: 2.95, twoTo99: 1.57, hundredUp: 1.47 },
   { sizeKey: "811", sizeLabel: "8.5 x 11 Letters", mailClass: "FirstClass", one: 3.25, twoTo99: 1.77, hundredUp: 1.67 },
-  { sizeKey: "BRO", sizeLabel: "8.5 x 11 Yellow Letters", mailClass: "Standard", one: 1.49, twoTo99: 1.49, hundredUp: 1.49 },
-  { sizeKey: "BRO", sizeLabel: "8.5 x 11 Yellow Letters", mailClass: "FirstClass", one: 1.69, twoTo99: 1.69, hundredUp: 1.69 },
 ];
 
 function getPrice(size: string, mailClass: "FirstClass" | "Standard", quantity: number): number {
@@ -31,7 +29,7 @@ function getPrice(size: string, mailClass: "FirstClass" | "Standard", quantity: 
 }
 
 export default function OrderSummaryCard() {
-  const { currentOrder } = useOrderStore();
+  const { currentOrder, setCurrentOrder } = useOrderStore();
   const recipientCount = currentOrder.recipients?.length || 0;
 
   const size = currentOrder.designSize;
