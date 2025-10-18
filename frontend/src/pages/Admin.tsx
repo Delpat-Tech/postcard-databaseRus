@@ -406,7 +406,7 @@ export default function Admin() {
                       <Button
                         onClick={async () => {
                           try {
-                            await useAdminStores.getState().importDesigns();
+                            await useAdminStore.getState().importDesigns();
                             // reload admin view
                             await fetchAllTemplates();
                             setTemplateFilter("all");
