@@ -88,7 +88,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: orderId,
+        body: JSON.stringify({ orderId }),
       });
       if (res.ok) {
         const payid = await res.json()

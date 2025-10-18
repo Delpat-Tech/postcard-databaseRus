@@ -44,7 +44,6 @@ export default function Order() {
     addRecipient,
     clearCurrentOrder,
     createOrder,
-    submitOrder,
   } = useOrderStore();
   const { generateletterProofByTemplate, generateProofByTemplate } = useTemplateStore()
   const [currentStep, setCurrentStep] = useState(0);
@@ -58,7 +57,6 @@ export default function Order() {
     quantityCorrect: false,
   });
   const [isOrderSubmitted, setIsOrderSubmitted] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
   const [order, setOrder] = useState<Partial<Order>>();
 
   const [proofFront, setProofFront] = useState<string | null>(null);
@@ -85,7 +83,6 @@ export default function Order() {
         ...currentOrder
       };
       const order = await createOrder(orderData);
-      setOrderId(order._id);
       setOrder(order)
       setCurrentStep(5); // Move to the Payment step (index 4)
     } catch (err) {
@@ -95,20 +92,19 @@ export default function Order() {
   };
 
   const handleSubmitOrder = async () => {
-    if (!orderId) {
-      alert("Error: Order ID missing. Cannot submit.");
-      return;
-    }
-    try {
-      await submitOrder(orderId);
-      clearCurrentOrder();
-      setOrderId(null);
-      setIsOrderSubmitted(true);
-      setCurrentStep(TOTAL_STEPS); // Advance to a success state (index 5)
-    } catch (err) {
-      console.error("Submit error:", err);
-      alert("Failed to finalize order submission.");
-    }
+    clearCurrentOrder();
+    setIsOrderSubmitted(true);
+    setCurrentStep(TOTAL_STEPS); // Advance to a success state (index 5)
+    // if (!orderId) {
+    //   alert("Error: Order ID missing. Cannot submit.");
+    //   return;
+    // }
+    // try {
+    //   await submitOrder(orderId);
+    // } catch (err) {
+    //   console.error("Submit error:", err);
+    //   alert("Failed to finalize order submission.");
+    // }
   };
 
   const isChecklistComplete = Object.values(approvalChecklist).every(Boolean);
@@ -177,7 +173,6 @@ export default function Order() {
     if (currentStep === 3 && currentOrder.recipients?.length && proofsMissing) {
       handleGenerateProof();
     }
-    console.log(currentStep);
 
   }, [
     currentStep,
@@ -328,7 +323,7 @@ export default function Order() {
           <Button
             onClick={() => setCurrentStep((s) => Math.max(0, s - 1))}
             // Disable if on the first step (0) or on the final submission screen (TOTAL_STEPS=5)
-            disabled={currentStep === 0 || currentStep === TOTAL_STEPS}
+            disabled={currentStep === 0}
             variant="secondary"
           >
             Previous

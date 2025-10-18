@@ -5,10 +5,19 @@ import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import Templates from "./pages/Templates";
 import Navbar from "./components/Navbar";
+import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 
+const PP_CLIENT_ID =
+  import.meta.env.VITE_PAYPAL_CLIENT_ID;
+// Replace 'YOUR_CLIENT_ID' with your actual PayPal client ID
+const initialOptions = {
+  clientId: PP_CLIENT_ID,
+  currency: "USD",
+  intent: "capture",
+};
 export default function App() {
   return (
-    <>
+    <PayPalScriptProvider options={initialOptions}>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -17,6 +26,6 @@ export default function App() {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
-    </>
+    </PayPalScriptProvider>
   );
 }
