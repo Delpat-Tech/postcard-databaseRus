@@ -4,8 +4,6 @@ import Order from "./pages/Order";
 import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import Templates from "./pages/Templates";
-import Design from "./pages/Design";
-import Upload from "./pages/Upload";
 import Navbar from "./components/Navbar";
 
 export default function App() {
@@ -16,8 +14,6 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/order" element={<Order />} />
         <Route path="/templates" element={<Templates />} />
-        <Route path="/design/:id" element={<Design />} />
-        <Route path="/upload" element={<Upload />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>

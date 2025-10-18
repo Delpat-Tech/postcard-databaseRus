@@ -1,8 +1,5 @@
 // ./steps/step5.jsx
 
-import { Card } from "../../components/FormComponents";
-import OrderSummaryCard from "../../components/OrderSummaryCard";
-
 export default function Step5Payment({ order, onPaymentSuccess }) {
     // Calculate total amount. Assuming totalCost is available on currentOrder.
     // You'll need to ensure your useOrderStore logic calculates and stores this.

@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useOrderStore } from "../store/orderStore";
 import { useNavigate } from "react-router-dom";
+import { useTemplateStore } from "../store/templateStore";
 
 export default function Templates() {
-  const { templates, fetchTemplates, isLoading, setCurrentOrder } = useOrderStore();
+  const { isLoading, setCurrentOrder } = useOrderStore();
+  const { templates, fetchTemplates, } = useTemplateStore()
+
   const navigate = useNavigate();
   const [loadingEditor, setLoadingEditor] = useState<string | null>(null);
   // Pricing definitions
@@ -35,7 +38,7 @@ export default function Templates() {
   const openEditor = async (templateId: string) => {
     try {
       setLoadingEditor(templateId);
-      const template = await useOrderStore.getState().openTemplateEditor(templateId);
+      const template = await useTemplateStore.getState().openTemplateEditor(templateId);
 
       setCurrentOrder({ templateId: template._id, designId: template.pcmDesignId || template._id, designName: template.name, designSize: pricingTable.find(p => p.sizeLabel === template.size)?.sizeKey, isCustomDesign: true });
       navigate('/order');

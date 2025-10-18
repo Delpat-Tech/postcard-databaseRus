@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
 import { Button } from "../components/FormComponents";
-import { useOrderStore } from "../store/orderStore";
-
+import { useAdminStore } from "../store/adminStore";
 export default function Home() {
-  const token = useOrderStore((s) => s.token);
+  const token = useAdminStore((s) => s.token);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">

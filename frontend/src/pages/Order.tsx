@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { useOrderStore, type Order } from "../store/orderStore";
+import { useOrderStore } from "../store/orderStore";
+import { useTemplateStore } from "../store/templateStore";
+import type { Order } from "../store/types";
 import Stepper from "../components/Stepper";
 import OrderSummaryCard from "../components/OrderSummaryCard";
 import Step0 from "./steps/step0";
@@ -43,10 +45,8 @@ export default function Order() {
     clearCurrentOrder,
     createOrder,
     submitOrder,
-    generateProofByTemplate,
-    generateletterProofByTemplate,
   } = useOrderStore();
-
+  const { generateletterProofByTemplate, generateProofByTemplate } = useTemplateStore()
   const [currentStep, setCurrentStep] = useState(0);
   const [productType, setProductType] = useState<"postcard" | "letter" | null>(null);
   const [approvalChecklist, setApprovalChecklist] = useState({

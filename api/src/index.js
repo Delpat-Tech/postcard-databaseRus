@@ -22,7 +22,7 @@ const templateRoutes = require("./routes/templates");
 const orderRoutes = require("./routes/orders");
 const uploadRoutes = require("./routes/uploads");
 const adminRoutes = require("./routes/admin");
-
+const payRoutes = require("./routes/payment");
 const app = express();
 const PORT = process.env.PORT || 4000;
 const morganMiddleware = morgan(function (tokens, req, res) {
@@ -84,6 +84,7 @@ app.use("/api/templates", templateRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/payments", payRoutes);
 
 // health
 app.get("/health", (req, res) => res.json({ ok: true, time: new Date() }));

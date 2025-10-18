@@ -155,6 +155,10 @@ const OrderSchema = new mongoose.Schema(
       enum: ["resident", "occupant", "business"],
     },
 
+    /** ---------- Paypal Info ---------- */
+
+    paypalCaptureId: String,
+    paypalData: Object,
     /** ---------- System & Status ---------- */
     status: {
       type: String,

@@ -183,6 +183,7 @@ interface OrderStore {
   importDesigns: () => Promise<Template[]>;
   createOrder: (orderData: Partial<Order>) => Promise<Order>;
   updateOrder: (orderId: string, orderData: Partial<Order>) => Promise<Order>;
+  createPaymentOrder: (orderId: string) => Promise<any>;
   submitOrder: (orderId: string) => Promise<Order>;
   approveOrder: (orderId: string) => Promise<Order>;
   rejectOrder: (orderId: string) => Promise<Order>;
@@ -575,6 +576,31 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
           isLoading: false,
         }));
         return order;
+      } else {
+        throw new Error("Failed to update order");
+      }
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : "Unknown error",
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
+  createPaymentOrder: async (orderId: string) => {
+
+    set({ isLoading: true, error: null });
+    try {
+      const res = await fetch(`${API_BASE_URL}/payments/create-order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: orderId,
+      });
+      if (res.ok) {
+        const payid = await res.json()
+        return payid;
       } else {
         throw new Error("Failed to update order");
       }

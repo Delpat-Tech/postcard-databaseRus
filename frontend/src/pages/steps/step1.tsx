@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOrderStore } from "../../store/orderStore";
+import { useTemplateStore } from "../../store/templateStore";
+
 type PricingRule = {
     sizeKey: string;
     sizeLabel: string;
@@ -10,10 +12,10 @@ type PricingRule = {
     hundredUp: number;
 };
 export default function Step1UploadAndSelect() {
-    const { currentOrder, setCurrentOrder, templates, openTemplateEditor, openTemplateSimpleEditor } = useOrderStore();
+    const { templates, openTemplateEditor, openTemplateSimpleEditor } = useTemplateStore()
+    const { currentOrder, setCurrentOrder } = useOrderStore();
     const [frontHTML, setFrontHTML] = useState(currentOrder.front || "");
     const [backHTML, setBackHTML] = useState(currentOrder.back || "");
-    const [showCreateForm, setShowCreateForm] = useState(false);
     const navigate = useNavigate();
 
     const selectedTemplate = templates.find((t) => t._id === currentOrder.templateId) || null;

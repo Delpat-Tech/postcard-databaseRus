@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { useOrderStore } from "../store/orderStore";
+import { useAdminStore } from "../store/adminStore";
+import { useAuthStore } from "../store/authStore";
 import { Button, Card } from "../components/FormComponents";
 import Swal from "sweetalert2";
 
 export default function Admin() {
   const {
+    token,
     orders,
     templates,
     fetchOrders,
@@ -12,11 +14,9 @@ export default function Admin() {
     approveOrder,
     rejectOrder,
     toggleTemplateVisibility,
-    token,
-    adminLogin,
-    adminLogout,
     error: storeError,
-  } = useOrderStore();
+  } = useAdminStore();
+  const { adminLogin, adminLogout } = useAuthStore()
   const [templateFilter, setTemplateFilter] = React.useState<"all" | "public" | "private">("all");
   const [activeTab, setActiveTab] = useState<"orders" | "templates">("orders");
   const [sortOption, setSortOption] = useState<"newest" | "oldest" | "pending" | "approved" | "rejected">("newest");
@@ -406,7 +406,7 @@ export default function Admin() {
                       <Button
                         onClick={async () => {
                           try {
-                            await useOrderStore.getState().importDesigns();
+                            await useAdminStores.getState().importDesigns();
                             // reload admin view
                             await fetchAllTemplates();
                             setTemplateFilter("all");
