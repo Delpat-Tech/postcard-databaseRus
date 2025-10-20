@@ -27,8 +27,6 @@ export default function Templates() {
     { sizeKey: "611", sizeLabel: "6 x 11", mailClass: "FirstClass", one: 2.75, twoTo99: 1.51, hundredUp: 1.41 },
     { sizeKey: "811", sizeLabel: "8.5 x 11 Letters", mailClass: "Standard", one: 2.95, twoTo99: 1.57, hundredUp: 1.47 },
     { sizeKey: "811", sizeLabel: "8.5 x 11 Letters", mailClass: "FirstClass", one: 3.25, twoTo99: 1.77, hundredUp: 1.67 },
-    { sizeKey: "BRO", sizeLabel: "8.5 x 11 Yellow Letters", mailClass: "Standard", one: 1.49, twoTo99: 1.49, hundredUp: 1.49 },
-    { sizeKey: "BRO", sizeLabel: "8.5 x 11 Yellow Letters", mailClass: "FirstClass", one: 1.69, twoTo99: 1.69, hundredUp: 1.69 },
   ];
 
   useEffect(() => {
@@ -94,7 +92,7 @@ export default function Templates() {
                       onClick={() => {
                         // set order design to this template (store DB _id and pcmDesignId)
                         setCurrentOrder({ templateId: t._id, designId: t.pcmDesignId || t._id, designName: t.name, designSize: pricingTable.find(p => p.sizeLabel === t.size)?.sizeKey, isCustomDesign: false });
-                        navigate('/order');
+                        navigate('/order?step=1&type=postcard');
                       }}
                       className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                     >

@@ -75,7 +75,7 @@ router.post("/", async (req, res) => {
     }
 
     // Design validation (either custom or from library)
-    if (!data.isCustomDesign) {
+    if (!data.isCustomDesign && !data.front) {
       if (!data.designId && !data.designName) {
         return res.status(400).json({ error: "Design ID or name is required for non-custom designs." });
       }
@@ -210,7 +210,7 @@ router.get("/:id", async (req, res) => {
 // POST /api/orders/:id/approve - Approve order and send to PostcardMania
 router.post("/:id/approve", adminAuth, async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    let order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ error: "Order not found" });
 
     if (order.status !== "pending_admin_approval") {
@@ -218,25 +218,49 @@ router.post("/:id/approve", adminAuth, async (req, res) => {
     }
 
     let pcmResponse;
-    try {
-      const pcmOrderData = postcardManiaService.formatOrderForPCM(order);
-      pcmResponse = await postcardManiaService.createOrder(pcmOrderData);
-    } catch (pcmError) {
-      console.error("Error sending order to PostcardMania:", pcmError);
-      return res.status(500).json({ error: "Failed to submit order to PostcardMania" });
+    if (order.productType === "postcard") {
+      try {
+        const pcmOrderData = postcardManiaService.formatOrderForPCMpostcard(order);
+        pcmResponse = await postcardManiaService.createOrderpostcard(pcmOrderData);
+      } catch (pcmError) {
+        console.error("Error sending order to PostcardMania:", pcmError);
+        return res.status(500).json({ error: "Failed to submit order to PostcardMania" });
+      }
+
+      try {
+        order.status = "submitted_to_pcm";
+        order.pcmOrderId = pcmResponse.id;
+        order.pcmResponse = pcmResponse;
+        order.updatedAt = new Date();
+        await order.save();
+      } catch (saveError) {
+        console.error("Error updating order after PCM submission:", saveError);
+        return res.status(500).json({ error: "Failed to update order status after PCM submission" });
+      }
+    }
+    else if (order.productType === "letter") {
+      try {
+        const pcmOrderData = postcardManiaService.formatOrderForPCMletter(order);
+        pcmResponse = await postcardManiaService.createOrderletter(pcmOrderData);
+      } catch (pcmError) {
+        console.error("Error sending letter order to PostcardMania:", pcmError);
+        return res.status(500).json({ error: "Failed to submit letter order to PostcardMania" });
+      }
+      try {
+        order.status = "submitted_to_pcm";
+        order.pcmOrderId = pcmResponse.id;
+        order.pcmResponse = pcmResponse;
+        order.updatedAt = new Date();
+        await order.save();
+      } catch (saveError) {
+        console.error("Error updating order after PCM submission:", saveError);
+        return res.status(500).json({ error: "Failed to update order status after PCM submission" });
+      }
     }
 
-    try {
-      order.status = "submitted_to_pcm";
-      order.pcmOrderId = pcmResponse.id;
-      order.pcmResponse = pcmResponse;
-      order.updatedAt = new Date();
-      await order.save();
-    } catch (saveError) {
-      console.error("Error updating order after PCM submission:", saveError);
-      return res.status(500).json({ error: "Failed to update order status after PCM submission" });
+    else {
+      return res.status(400).json({ error: "Unsupported product type for approval" });
     }
-
     res.json(order);
   } catch (error) {
     console.error("Error approving order:", error);

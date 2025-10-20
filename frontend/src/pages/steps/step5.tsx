@@ -1,13 +1,12 @@
 // ./steps/step5.jsx
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import { useOrderStore } from "../../store/orderStore"; // Adjust path as needed
-
 // A simple utility to wait for a short time (optional, but good for UX)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default function Step5Payment({ order, onPaymentSuccess }) {
     // You only need the function to create the PayPal order ID from the store
-    const { createPaymentOrder } = useOrderStore();
+    const { createPaymentOrder, submitOrder } = useOrderStore();
     const orderId = order._id; // The ID of your internal database order
 
     // 1. Function called by PayPal SDK to start the transaction

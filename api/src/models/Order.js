@@ -86,12 +86,6 @@ const OrderSchema = new mongoose.Schema(
     externalReference: { type: String },
     mailDate: { type: String, required: true },
 
-    /** For brochures / folds */
-    brochureFold: {
-      type: String,
-      enum: ["Tri-Fold", "Bi-Fold"],
-      default: "Bi-Fold",
-    },
 
     /** Address & Contact Info */
     returnAddress: ReturnAddressSchema,
