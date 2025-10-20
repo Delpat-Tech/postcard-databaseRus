@@ -45,6 +45,7 @@ export default function Order() {
     addRecipient,
     clearCurrentOrder,
     createOrder,
+    submitOrder
   } = useOrderStore();
 
   const searchpara = useSearchParams()[0];
@@ -111,18 +112,19 @@ export default function Order() {
 
   const handleSubmitOrder = async () => {
     clearCurrentOrder();
+    if (!order || !order._id) {
+      alert("Error: Order ID missing. Cannot submit.");
+      return;
+    }
+    await submitOrder(order._id);
     setIsOrderSubmitted(true);
     setCurrentStep(TOTAL_STEPS); // Advance to a success state (index 5)
-    // if (!orderId) {
-    //   alert("Error: Order ID missing. Cannot submit.");
-    //   return;
-    // await submitOrder(orderId);
-    // }
-    // try {
-    // } catch (err) {
-    //   console.error("Submit error:", err);
-    //   alert("Failed to finalize order submission.");
-    // }
+
+    try {
+    } catch (err) {
+      console.error("Submit error:", err);
+      alert("Failed to finalize order submission.");
+    }
   };
 
   const isChecklistComplete = Object.values(approvalChecklist).every(Boolean);
