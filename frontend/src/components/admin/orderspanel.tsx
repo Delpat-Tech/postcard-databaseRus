@@ -186,62 +186,129 @@ function OrderCard({
 /* -------------------------------------------------------------------------- */
 /*                           Letter / Postcard Info                           */
 /* -------------------------------------------------------------------------- */
-
 function LetterDetails({ order }: { order: any }) {
+    const handleOpenInNewPage = (htmlContent: string, title: string) => {
+        const newWindow = window.open("", "_blank");
+        if (newWindow) {
+            newWindow.document.write(`
+                <html>
+                    <head>
+                        <title>${title}</title>
+                        <style>body { font-family: sans-serif; padding: 16px; }</style>
+                    </head>
+                    <body>${htmlContent}</body>
+                </html>
+            `);
+            newWindow.document.close();
+        }
+    };
+
+    const showCustomDesign = !order.designId && order.front;
+
     return (
         <div className="border-t pt-3 mt-3 text-sm text-gray-700">
             <p className="font-semibold mb-2">Letter Details:</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <p><strong>Design ID:</strong> {order.designId || "N/A"}</p>
-                <p><strong>Design Size:</strong> {order.designSize || "N/A"}</p>
+                {order.designId ? (
+                    <>
+                        <p><strong>Design ID:</strong> {order.designId}</p>
+                        <p><strong>Design Size:</strong> {order.designSize || "N/A"}</p>
+                    </>
+                ) : null}
+
                 <p><strong>Color:</strong> {order.color ? "Yes" : "No"}</p>
                 <p><strong>Print Both Sides:</strong> {order.printOnBothSides ? "Yes" : "No"}</p>
-                <p><strong>Envelope:</strong> {order.envelopeType || "N/A"}</p>
+                <p><strong>Envelope Type:</strong> {order.envelopeType || "N/A"}</p>
                 <p><strong>Font:</strong> {order.font || "Default"}</p>
                 <p><strong>Font Color:</strong> {order.fontColor || "Black"}</p>
                 {order.exceptionalAddressingType && (
                     <p><strong>Addressing Type:</strong> {order.exceptionalAddressingType}</p>
                 )}
             </div>
-        </div>
-    );
-}
 
-function PostcardDetails({ order }: { order: any }) {
-    return (
-        <div className="border-t pt-3 mt-3 text-sm text-gray-700">
-            <p className="font-semibold mb-2">Postcard Details:</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <p><strong>Template ID:</strong> {order.templateId || "N/A"}</p>
-                <p><strong>Design ID:</strong> {order.designId || "N/A"}</p>
-                <p><strong>Design Name:</strong> {order.designName || "N/A"}</p>
-                <p><strong>Design Size:</strong> {order.designSize || "N/A"}</p>
-            </div>
-
-            {/* Front / Back content preview */}
-            {order.isCustomDesign && (
+            {showCustomDesign && (
                 <div className="mt-3">
-                    <p className="font-semibold mb-1">Custom Design Preview:</p>
+                    <p className="font-semibold mb-1">Custom Letter Preview:</p>
                     <div className="bg-gray-50 border rounded p-2 text-xs max-h-48 overflow-auto">
-                        <p className="text-gray-700">
-                            <strong>Front:</strong>{" "}
-                            {order.front
-                                ? order.front.substring(0, 300) + (order.front.length > 300 ? "..." : "")
-                                : "N/A"}
-                        </p>
-                        <p className="text-gray-700 mt-2">
-                            <strong>Back:</strong>{" "}
-                            {order.back
-                                ? order.back.substring(0, 300) + (order.back.length > 300 ? "..." : "")
-                                : "N/A"}
+                        <p
+                            className="text-gray-700 cursor-pointer hover:underline"
+                            onClick={() => handleOpenInNewPage(order.front, "Letter Content")}
+                        >
+                            {order.front.substring(0, 300)}
+                            {order.front.length > 300 ? "..." : ""}
                         </p>
                     </div>
                 </div>
             )}
-
         </div>
     );
 }
+
+
+function PostcardDetails({ order }: { order: any }) {
+    const handleOpenInNewPage = (htmlContent: string, title: string) => {
+        const newWindow = window.open("", "_blank");
+        if (newWindow) {
+            newWindow.document.write(`
+                <html>
+                    <head>
+                        <title>${title}</title>
+                        <style>body { font-family: sans-serif; padding: 16px; }</style>
+                    </head>
+                    <body>${htmlContent}</body>
+                </html>
+            `);
+            newWindow.document.close();
+        }
+    };
+
+    const showCustomDesign = !order.designId && (order.front || order.back);
+
+    return (
+        <div className="border-t pt-3 mt-3 text-sm text-gray-700">
+            <p className="font-semibold mb-2">Postcard Details:</p>
+
+            {order.designId ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <p><strong>Template ID:</strong> {order.templateId || "N/A"}</p>
+                    <p><strong>Design ID:</strong> {order.designId}</p>
+                    <p><strong>Design Name:</strong> {order.designName || "N/A"}</p>
+                    <p><strong>Design Size:</strong> {order.designSize || "N/A"}</p>
+                </div>
+            ) : null}
+
+            {showCustomDesign && (
+                <div className="mt-3">
+                    <p className="font-semibold mb-1">Custom Design Preview:</p>
+                    <div className="bg-gray-50 border rounded p-2 text-xs max-h-48 overflow-auto">
+                        {order.front && (
+                            <p
+                                className="text-gray-700 cursor-pointer hover:underline"
+                                onClick={() => handleOpenInNewPage(order.front, "Front Design")}
+                            >
+                                <strong>Front:</strong>{" "}
+                                {order.front.substring(0, 300)}
+                                {order.front.length > 300 ? "..." : ""}
+                            </p>
+                        )}
+                        {order.back && (
+                            <p
+                                className="text-gray-700 mt-2 cursor-pointer hover:underline"
+                                onClick={() => handleOpenInNewPage(order.back, "Back Design")}
+                            >
+                                <strong>Back:</strong>{" "}
+                                {order.back.substring(0, 300)}
+                                {order.back.length > 300 ? "..." : ""}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+
 
 /* -------------------------------------------------------------------------- */
 /*                             ProofPreview Logic                             */
