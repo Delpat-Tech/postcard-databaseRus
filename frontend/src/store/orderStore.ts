@@ -18,7 +18,10 @@ interface OrderStore {
 }
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
-  token: typeof window !== "undefined" ? (localStorage.getItem("token") || null) : null,
+  token:
+    typeof window !== "undefined"
+      ? localStorage.getItem("token") || null
+      : null,
   currentOrder: {},
   isLoading: false,
   error: null,
@@ -61,7 +64,9 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       if (!response.ok) {
         // Prefer backend-provided message
         const message =
-          data?.error || data?.message || `Request failed with status ${response.status}`;
+          data?.error ||
+          data?.message ||
+          `Request failed with status ${response.status}`;
         throw new Error(message);
       }
 
@@ -78,9 +83,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     }
   },
 
-
   createPaymentOrder: async (orderId: string) => {
-
     set({ isLoading: true, error: null });
     try {
       const res = await fetch(`${API_BASE_URL}/payments/create-order`, {
@@ -91,8 +94,9 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
         body: JSON.stringify({ orderId }),
       });
       if (res.ok) {
-        const payid = await res.json()
-        return payid;
+        const response = await res.json();
+        // ✅ Extract the ID string from the response object
+        return response.id;
       } else {
         throw new Error("Failed to update order");
       }
@@ -108,7 +112,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   submitOrder: async (orderId) => {
     set({ isLoading: true, error: null });
     try {
-      const token = (localStorage.getItem("token") || null);
+      const token = localStorage.getItem("token") || null;
       const response = await fetch(`${API_BASE_URL}/orders/${orderId}/submit`, {
         method: "POST",
         headers: {
@@ -134,5 +138,4 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       throw error;
     }
   },
-
 }));
