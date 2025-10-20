@@ -12,6 +12,7 @@ import Step3Recipients from "./steps/step3";
 import Step4Review from "./steps/step4";
 import Step5Payment from "./steps/step5";
 import { Button, Card } from "../components/FormComponents";
+import { useSearchParams } from "react-router-dom";
 
 // Pricing definitions (kept for context)
 type PricingRule = {
@@ -45,6 +46,23 @@ export default function Order() {
     clearCurrentOrder,
     createOrder,
   } = useOrderStore();
+
+  const searchpara = useSearchParams()[0];
+
+  useEffect(() => {
+    const step = searchpara.get("step");
+    const type = searchpara.get("type");
+    if (type === "postcard" || type === "letter") {
+      if (step) {
+        setProductType(type);
+        setCurrentOrder({ productType: type, mailClass: "FirstClass", designSize: type === "postcard" ? "46" : "811", isCustomDesign: (type === "letter" ? true : false) });
+        setCurrentStep(1);
+
+      }
+    }
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }, []); // Run once on mount
+
   const { generateletterProofByTemplate, generateProofByTemplate } = useTemplateStore()
   const [currentStep, setCurrentStep] = useState(0);
   const [productType, setProductType] = useState<"postcard" | "letter" | null>(null);
@@ -98,9 +116,9 @@ export default function Order() {
     // if (!orderId) {
     //   alert("Error: Order ID missing. Cannot submit.");
     //   return;
+    // await submitOrder(orderId);
     // }
     // try {
-    //   await submitOrder(orderId);
     // } catch (err) {
     //   console.error("Submit error:", err);
     //   alert("Failed to finalize order submission.");

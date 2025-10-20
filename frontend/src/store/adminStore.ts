@@ -7,10 +7,8 @@ interface AdminStore {
     isLoading: boolean;
     orders: Order[];
     templates: Template[];
-    token: string | null;
     error: string | null;
     setTemplates: (templates: Template[]) => void;
-
     toggleTemplateVisibility: (templateId: string) => Promise<void>;
     fetchAllTemplates: () => Promise<void>;
     importDesigns: () => Promise<Template[]>;
@@ -22,7 +20,6 @@ interface AdminStore {
 export const useAdminStore = create<AdminStore>((set, get) => ({
     isLoading: false,
     error: null,
-    token: typeof window !== "undefined" ? (localStorage.getItem("token") || null) : null,
     orders: [],
     templates: [],
     setTemplates: (templates) => set({ templates }),
