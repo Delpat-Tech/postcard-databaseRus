@@ -44,7 +44,7 @@ export default function Step4Review({
             <OrderSummaryCard />
 
             {/* This button moves the user to the new Step 5 (Payment) */}
-            <Button onClick={handleSubmitOrder} disabled={!isChecklistComplete} className="w-full py-3 text-lg">
+            <Button onClick={handleSubmitOrder} disabled={!isChecklistComplete || (!proofBack && !proofFront)} className="w-full py-3 text-lg">
                 Approve & Proceed to Payment
             </Button>
         </div>

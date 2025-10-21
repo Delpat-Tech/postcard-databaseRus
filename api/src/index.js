@@ -20,7 +20,6 @@ const chalk = require("chalk");
 const authRoutes = require("./routes/auth");
 const templateRoutes = require("./routes/templates");
 const orderRoutes = require("./routes/orders");
-const uploadRoutes = require("./routes/uploads");
 const adminRoutes = require("./routes/admin");
 const payRoutes = require("./routes/payment");
 const app = express();
@@ -82,7 +81,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/templates", templateRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api/uploads", uploadRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payments", payRoutes);
 
@@ -91,7 +89,13 @@ app.get("/health", (req, res) => res.json({ ok: true, time: new Date() }));
 
 async function start() {
   try {
-    const uri = process.env.MONGO_URI;
+    let uri;
+    if (process.env.Node_ENV === 'development') {
+      uri = process.env.MONGO_URI;
+    }
+    else {
+      uri = process.env.MONGO_URI_PROD;
+    }
     if (!uri) throw new Error("MONGO_URI environment variable is not set");
 
     try {
@@ -107,8 +111,13 @@ async function start() {
         throw err;
       }
     }
+    if (uri.includes("srv:")) {
+      console.log("MongoDB Live Connected");
+    }
+    else {
+      console.log("MongoDB Local Connected");
 
-    console.log("MongoDB connected");
+    }
     app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
   } catch (err) {
     console.error("Failed to start server", err);
