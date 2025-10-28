@@ -31,6 +31,7 @@ interface TemplateStore {
         templateId?: string,
         front?: string,
     ) => Promise<{ front: string }>;
+    fetchTemplatesByType: (type: string) => Promise<void>;
 }
 
 export const useTemplateStore = create<TemplateStore>((set) => ({
@@ -43,6 +44,22 @@ export const useTemplateStore = create<TemplateStore>((set) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await fetch(`${API_BASE_URL}/templates/public`);
+            if (!response.ok) throw new Error("Failed to fetch templates");
+            const templates = await response.json();
+            set({ templates, isLoading: false });
+        } catch (error) {
+            set({
+                error: error instanceof Error ? error.message : "Unknown error",
+                isLoading: false,
+            });
+        }
+    },
+
+    // fetch public templates filtered by type (postcard, letter, brochure, bookmark)
+    fetchTemplatesByType: async (type: string) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await fetch(`${API_BASE_URL}/templates/public?type=${encodeURIComponent(type)}`);
             if (!response.ok) throw new Error("Failed to fetch templates");
             const templates = await response.json();
             set({ templates, isLoading: false });

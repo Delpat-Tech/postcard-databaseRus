@@ -104,6 +104,7 @@ export interface Template {
     size: string;
     previewUrl: string;
     url?: string;
+    type?: string;
     isPublic: boolean;
     createdAt: Date;
     updatedAt: Date;

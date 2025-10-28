@@ -1,12 +1,18 @@
 import { Input, Select } from "../../components/FormComponents";
+import { usePublicStore } from "../../store/publicStore";
 
 export default function Step2Config({
     currentOrder,
     setCurrentOrder,
     sizeOptions,
     mailClassOptions,
-}) {
-    const handleReturnAddressChange = (field, value) => {
+}: any) {
+    const prices = usePublicStore((s) => s.prices);
+    // derive size options from server pricing if available, otherwise use passed sizeOptions
+    const effectiveSizeOptions = prices && prices.length > 0
+        ? Array.from(new Map(prices.map(p => [p.sizeKey + '|' + p.sizeLabel, { label: p.sizeLabel, value: p.sizeKey }])).values())
+        : sizeOptions;
+    const handleReturnAddressChange = (field: string, value: any) => {
         setCurrentOrder({
             returnAddress: {
                 ...currentOrder.returnAddress,
@@ -15,7 +21,7 @@ export default function Step2Config({
         });
     };
 
-    const handleUserDetailsChange = (field, value) => {
+    const handleUserDetailsChange = (field: string, value: any) => {
         setCurrentOrder({
             userDet: {
                 ...currentOrder.userDet,
@@ -62,7 +68,7 @@ export default function Step2Config({
                         name="designSize"
                         value={currentOrder.designSize || "46"}
                         onChange={(value) => setCurrentOrder({ designSize: value })}
-                        options={sizeOptions}
+                        options={effectiveSizeOptions}
                     />
                     <Select
                         label="Mail Class"

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useOrderStore } from "../../store/orderStore";
 import { useTemplateStore } from "../../store/templateStore";
+import { usePublicStore } from "../../store/publicStore";
 
 type PricingRule = {
     sizeKey: string;
@@ -14,6 +15,8 @@ type PricingRule = {
 export default function Step1UploadAndSelect() {
     const { templates, openTemplateEditor, openTemplateSimpleEditor } = useTemplateStore()
     const { currentOrder, setCurrentOrder } = useOrderStore();
+    const prices = usePublicStore((s) => s.prices);
+    const fetchPricesByType = usePublicStore((s) => s.fetchPricesByType);
     const [frontHTML, setFrontHTML] = useState(currentOrder.front || "");
     const [backHTML, setBackHTML] = useState(currentOrder.back || "");
     const navigate = useNavigate();
@@ -30,6 +33,12 @@ export default function Step1UploadAndSelect() {
         { sizeKey: "BRO", sizeLabel: "8.5 x 11 Yellow Letters", mailClass: "Standard", one: 1.49, twoTo99: 1.49, hundredUp: 1.49 },
         { sizeKey: "BRO", sizeLabel: "8.5 x 11 Yellow Letters", mailClass: "FirstClass", one: 1.69, twoTo99: 1.69, hundredUp: 1.69 },
     ];
+    useEffect(() => {
+        const type = currentOrder.productType || currentOrder.designType || 'postcard';
+        if (!prices || prices.length === 0) {
+            fetchPricesByType(type).catch(() => { });
+        }
+    }, []);
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, side: "front" | "back") => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -142,7 +151,7 @@ export default function Step1UploadAndSelect() {
                                                     templateId: template._id,
                                                     designId: template.pcmDesignId || template._id,
                                                     designName: template.name,
-                                                    designSize: pricingTable.find(p => p.sizeLabel === template.size)?.sizeKey,
+                                                    designSize: (prices.find(p => p.sizeLabel === template.size)?.sizeKey) || pricingTable.find(p => p.sizeLabel === template.size)?.sizeKey,
                                                     isCustomDesign: true,
                                                 });
                                                 navigate("/order");

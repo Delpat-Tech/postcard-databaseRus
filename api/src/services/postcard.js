@@ -300,6 +300,19 @@ class PostcardService {
         };
     }
 
+    // Delete a design in PostcardMania by design ID
+    // Note: assumes PostcardMania exposes DELETE /design/:id — if API differs adjust accordingly.
+    async deleteDesign(designId) {
+        try {
+            await this.ensureAuth();
+            const r = await this.client.delete(`/design/${designId}`);
+            return r.data;
+        } catch (error) {
+            console.error(`Failed to delete design ${designId}:`, error?.response?.data || error.message || error);
+            throw new Error(`Failed to delete design ${designId} from PostcardMania`);
+        }
+    }
+
     // wrapper to send to printer (keeps compatibility)
     async sendToPrinter(order, adminUser) {
         const payload = this.formatOrderForPCM(order);

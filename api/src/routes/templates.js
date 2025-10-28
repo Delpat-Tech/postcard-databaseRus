@@ -6,8 +6,26 @@ const postcardManiaService = require("../services/postcard");
 // GET /api/templates/public - Get all public templates
 router.get("/public", async (req, res) => {
   try {
-    const templates = await Template.find({ isPublic: true });
+    const type = req.query.type;
+    const filter = { isPublic: true, deleted: { $ne: true } };
+    if (type) filter.type = String(type);
+    const templates = await Template.find(filter);
     res.json(templates);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Public prices endpoint: GET /api/templates/prices?type=postcard
+const Price = require("../models/Price");
+router.get("/prices", async (req, res) => {
+  try {
+    const type = String(req.query.type || "postcard");
+    const p = await Price.findOne();
+    if (!p) return res.json({ pricing: [] });
+    const mapType = type === "bookmark" ? "bookmark" : type; // stay consistent
+    const pricing = (p.pricingByType && p.pricingByType[mapType]) || [];
+    res.json({ pricing });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -62,7 +80,8 @@ router.post("/proofletter", async (req, res) => {
 // GET /api/templates - Get all templates (admin only)
 router.get("/", adminAuth, async (req, res) => {
   try {
-    const templates = await Template.find();
+    // exclude soft-deleted templates from normal listings
+    const templates = await Template.find({ deleted: { $ne: true } });
     res.json(templates);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -165,6 +184,28 @@ router.put("/:id/public", adminAuth, async (req, res) => {
     res.json(template);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+// PUT /api/templates/:id/type - Set template type (admin only)
+router.put("/:id/type", adminAuth, async (req, res) => {
+  try {
+    const { type } = req.body;
+    const allowed = ["postcard", "letter", "brochure", "bookmark"];
+    if (!type || !allowed.includes(type)) {
+      return res.status(400).json({ error: "Invalid or missing type" });
+    }
+
+    const template = await Template.findByIdAndUpdate(
+      req.params.id,
+      { type, updatedAt: new Date() },
+      { new: true }
+    );
+
+    if (!template) return res.status(404).json({ error: "Template not found" });
+    res.json(template);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

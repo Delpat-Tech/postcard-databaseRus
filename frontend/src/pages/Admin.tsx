@@ -4,12 +4,13 @@ import { useAuthStore } from "../store/authStore";
 import LoginForm from "../components/admin/login";
 import OrdersPanel from "../components/admin/orderspanel";
 import TemplatesPanel from "../components/admin/templatespanel";
+import PriceEditor from "../components/admin/PriceEditor";
 import { Button } from "../components/FormComponents";
 
 export default function Admin() {
   const { fetchOrders, fetchAllTemplates, orders, templates } = useAdminStore();
   const { token, adminLogout } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<"orders" | "templates">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "templates" | "prices">("orders");
 
   useEffect(() => {
     if (token) {
@@ -43,11 +44,24 @@ export default function Admin() {
                 >
                   Templates ({templates.length})
                 </button>
+                <button
+                  onClick={() => setActiveTab("prices")}
+                  className={`pb-1 border-b-2 ${activeTab === "prices" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500"
+                    }`}
+                >
+                  Prices
+                </button>
               </nav>
               <Button onClick={adminLogout} variant="secondary">Logout</Button>
             </div>
 
-            {activeTab === "orders" ? <OrdersPanel /> : <TemplatesPanel />}
+            {activeTab === "orders" ? (
+              <OrdersPanel />
+            ) : activeTab === "templates" ? (
+              <TemplatesPanel />
+            ) : (
+              <PriceEditor />
+            )}
           </>
         )}
       </div>

@@ -1,41 +1,43 @@
-import { useOrderStore, type Address } from "../store/orderStore";
+import { useOrderStore } from "../store/orderStore";
+import type { Address } from "../store/types";
 import { useEffect } from "react";
-// Pricing definitions
-type PricingRule = {
-  sizeKey: string;
-  sizeLabel: string;
-  mailClass: "FirstClass" | "Standard";
-  one: number;
-  twoTo99: number;
-  hundredUp: number;
-};
+import { usePublicStore } from "../store/publicStore";
 
-const pricingTable: PricingRule[] = [
-  { sizeKey: "46", sizeLabel: "4.25 x 6", mailClass: "FirstClass", one: 1.99, twoTo99: 0.99, hundredUp: 0.89 },
-  { sizeKey: "68", sizeLabel: "6 x 8.5", mailClass: "Standard", one: 2.15, twoTo99: 1.14, hundredUp: 1.04 },
-  { sizeKey: "68", sizeLabel: "6 x 8.5", mailClass: "FirstClass", one: 2.35, twoTo99: 1.24, hundredUp: 1.10 },
-  { sizeKey: "611", sizeLabel: "6 x 11", mailClass: "Standard", one: 2.55, twoTo99: 1.41, hundredUp: 1.31 },
-  { sizeKey: "611", sizeLabel: "6 x 11", mailClass: "FirstClass", one: 2.75, twoTo99: 1.51, hundredUp: 1.41 },
-  { sizeKey: "811", sizeLabel: "8.5 x 11 Letters", mailClass: "Standard", one: 2.95, twoTo99: 1.57, hundredUp: 1.47 },
-  { sizeKey: "811", sizeLabel: "8.5 x 11 Letters", mailClass: "FirstClass", one: 3.25, twoTo99: 1.77, hundredUp: 1.67 },
-];
 
-function getPrice(size: string, mailClass: "FirstClass" | "Standard", quantity: number): number {
-  const rule = pricingTable.find(r => r.sizeKey === size && r.mailClass === mailClass);
-  if (!rule) return 0;
-  if (quantity === 1) return rule.one;
-  if (quantity >= 2 && quantity <= 99) return rule.twoTo99;
-  return rule.hundredUp;
-}
+// (server pricing is used when available; fallback to the local `pricingTable` defined above)
 
 export default function OrderSummaryCard() {
-  const { currentOrder, setCurrentOrder } = useOrderStore();
+  const { currentOrder } = useOrderStore();
+  const serverPricing = usePublicStore((s) => s.prices);
   const recipientCount = currentOrder.recipients?.length || 0;
 
   const size = currentOrder.designSize;
-  const mailClass: "FirstClass" | "Standard" = currentOrder.mailClass;
-  const pricePerPiece = getPrice(size, mailClass, recipientCount);
-  const total = Number((pricePerPiece * recipientCount).toFixed(2));
+  const mailClass: "FirstClass" | "Standard" = (currentOrder.mailClass || "FirstClass") as any;
+  const sizeKey = currentOrder.designSize || "";
+
+  // Ensure prices are loaded into publicStore when an order type is selected
+  const fetchPricesByType = usePublicStore.getState().fetchPricesByType;
+  useEffect(() => {
+    const type = (currentOrder.designType || "postcard");
+    if (!serverPricing || serverPricing.length === 0) {
+      fetchPricesByType(type).catch(() => {
+        /* ignore errors */
+      });
+    }
+  }, [currentOrder.designType]);
+
+  // use server pricing if available
+  function computePrice(size: string, mailClass: "FirstClass" | "Standard", quantity: number) {
+    const rules = serverPricing || [];
+    const rule = rules.find(r => r.sizeKey === size && r.mailClass === mailClass);
+    if (!rule) return 0;
+    if (quantity === 1) return rule.one;
+    if (quantity >= 2 && quantity <= 99) return rule.twoTo99;
+    return rule.hundredUp;
+  }
+
+  const pricePerPieceComputed = computePrice(sizeKey, mailClass, recipientCount);
+  const totalComputed = Number((pricePerPieceComputed * recipientCount).toFixed(2));
 
   const returnAddress: Address = currentOrder.returnAddress || {
     firstName: "",
@@ -76,7 +78,7 @@ export default function OrderSummaryCard() {
         <div>
           <span className="font-medium">Size:</span>
           <span className="ml-2">
-            {pricingTable.find(p => p.sizeKey === size)?.sizeLabel || size}
+            {serverPricing.find(p => p.sizeKey === size)?.sizeLabel}
           </span>
         </div>
 
@@ -87,12 +89,12 @@ export default function OrderSummaryCard() {
 
         <div>
           <span className="font-medium">Price per Piece:</span>
-          <span className="ml-2">${pricePerPiece.toFixed(2)}</span>
+          <span className="ml-2">${pricePerPieceComputed.toFixed(2)}</span>
         </div>
 
         <div>
           <span className="font-medium">Total Order:</span>
-          <span className="ml-2 font-bold">${total}</span>
+          <span className="ml-2 font-bold">${totalComputed}</span>
         </div>
       </div>
 

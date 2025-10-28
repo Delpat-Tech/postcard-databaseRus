@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { useOrderStore } from "../store/orderStore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTemplateStore } from "../store/templateStore";
+import { usePublicStore } from "../store/publicStore";
 
 export default function Templates() {
   const { isLoading, setCurrentOrder } = useOrderStore();
-  const { templates, fetchTemplates, } = useTemplateStore()
+  // public templates/prices are now served by publicStore
+  const { fetchTemplatesByType } = useTemplateStore();
+  const { templates: publicTemplates, fetchTemplatesByType: fetchPublicTemplatesByType, fetchPricesByType } = usePublicStore();
+
+  const location = useLocation();
+  const q = new URLSearchParams(location.search);
+  const pageType = (q.get("type") || "postcard");
+  const [pricingRules, setPricingRules] = useState<any[]>([]);
 
   const navigate = useNavigate();
   const [loadingEditor, setLoadingEditor] = useState<string | null>(null);
@@ -30,15 +38,28 @@ export default function Templates() {
   ];
 
   useEffect(() => {
-    fetchTemplates().catch((e) => console.error(e));
-  }, [fetchTemplates]);
+    (async () => {
+      try {
+        await fetchPublicTemplatesByType(pageType);
+      } catch (e) {
+        console.error(e);
+      }
+
+      try {
+        const data = await fetchPricesByType(pageType);
+        setPricingRules(data?.pricing || []);
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, [fetchTemplatesByType, pageType]);
 
   const openEditor = async (templateId: string) => {
     try {
       setLoadingEditor(templateId);
       const template = await useTemplateStore.getState().openTemplateEditor(templateId);
 
-      setCurrentOrder({ templateId: template._id, designId: template.pcmDesignId || template._id, designName: template.name, designSize: pricingTable.find(p => p.sizeLabel === template.size)?.sizeKey, isCustomDesign: true });
+      setCurrentOrder({ templateId: template._id, designId: template.pcmDesignId || template._id, designName: template.name, designSize: pricingRules.find(p => p.sizeLabel === template.size)?.sizeKey || pricingTable.find(p => p.sizeLabel === template.size)?.sizeKey, isCustomDesign: true });
       navigate('/order');
 
       window.open(template.url, "_blank");
@@ -66,7 +87,7 @@ export default function Templates() {
 
           {isLoading && <p>Loading templates...</p>}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {templates.map((t) => (
+            {publicTemplates.map((t) => (
               <div key={t._id} className="card p-4 border rounded">
                 {t.previewUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -91,8 +112,8 @@ export default function Templates() {
                     <button
                       onClick={() => {
                         // set order design to this template (store DB _id and pcmDesignId)
-                        setCurrentOrder({ templateId: t._id, designId: t.pcmDesignId || t._id, designName: t.name, designSize: pricingTable.find(p => p.sizeLabel === t.size)?.sizeKey, isCustomDesign: false });
-                        navigate('/order?step=1&type=postcard');
+                        setCurrentOrder({ templateId: t._id, designId: t.pcmDesignId || t._id, designName: t.name, designSize: pricingRules.find(p => p.sizeLabel === t.size)?.sizeKey || pricingTable.find(p => p.sizeLabel === t.size)?.sizeKey, isCustomDesign: false });
+                        navigate(`/order?step=1&type=${encodeURIComponent(pageType)}`);
                       }}
                       className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                     >

@@ -22,6 +22,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/order" element={<Order />} />
         <Route path="/templates" element={<Templates />} />
+        <Route path="/type/:type" element={<Home />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
     </PayPalScriptProvider>

@@ -3,6 +3,7 @@ const router = express.Router();
 const { adminAuth } = require("../middleware/auth");
 const Order = require("../models/Order");
 const Template = require("../models/Template");
+const Price = require("../models/Price");
 const postcardManiaService = require("../services/postcard");
 
 // GET /api/admin/designs/import - Import latest designs from PostcardMania
@@ -131,6 +132,75 @@ router.post("/orders/:id/reject", adminAuth, async (req, res) => {
     }
 
     res.json({ message: "Order rejected", order });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/admin/templates/:id/soft-delete - soft-delete template (hide from listings)
+router.post("/templates/:id/soft-delete", adminAuth, async (req, res) => {
+  try {
+    const template = await Template.findByIdAndUpdate(
+      req.params.id,
+      { deleted: true, isPublic: false, updatedAt: new Date() },
+      { new: true }
+    );
+    if (!template) return res.status(404).json({ error: "Template not found" });
+    res.json({ message: "Template soft-deleted", template });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/admin/templates/:id/delete-external - permanently delete template from PostcardMania and DB
+router.post("/templates/:id/delete-external", adminAuth, async (req, res) => {
+  try {
+    const template = await Template.findById(req.params.id);
+    if (!template) return res.status(404).json({ error: "Template not found" });
+
+    const designId = template.pcmDesignId;
+    if (!designId) return res.status(400).json({ error: "Template has no PostcardMania design id" });
+
+    // attempt to delete on PostcardMania
+    await postcardManiaService.deleteDesign(designId);
+
+    // remove local DB record permanently
+    await Template.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Template permanently deleted from PostcardMania and database" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/admin/prices?type=postcard - get current pricing rules for a type
+router.get("/prices", adminAuth, async (req, res) => {
+  try {
+    const type = String(req.query.type || "postcard");
+    const p = await Price.findOne();
+    if (!p) return res.json({ pricing: [] });
+    const mapType = type === "bookmark" ? "bookmark" : type;
+    const pricing = (p.pricingByType && p.pricingByType[mapType]) || [];
+    res.json({ pricing });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /api/admin/prices?type=postcard - replace pricing rules for a type
+router.put("/prices", adminAuth, async (req, res) => {
+  try {
+    const type = String(req.query.type || "postcard");
+    const rules = req.body.pricing || [];
+    if (!Array.isArray(rules)) return res.status(400).json({ error: "pricing must be an array" });
+
+    const key = type === "bookmark" ? "bookmark" : type;
+    const updateObj = { updatedAt: new Date() };
+    updateObj[`pricingByType.${key}`] = rules;
+
+    const p = await Price.findOneAndUpdate({}, { $set: updateObj }, { new: true, upsert: true, setDefaultsOnInsert: true });
+    res.json(p);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
