@@ -7,8 +7,8 @@ import { usePublicStore } from "../store/publicStore";
 export default function Templates() {
   const { isLoading, setCurrentOrder } = useOrderStore();
   // public templates/prices are now served by publicStore
-  const { fetchTemplatesByType } = useTemplateStore();
-  const { templates: publicTemplates, fetchTemplatesByType: fetchPublicTemplatesByType, fetchPricesByType } = usePublicStore();
+  const { templates, fetchTemplatesByType } = useTemplateStore();
+  const { fetchPricesByType } = usePublicStore();
 
   const location = useLocation();
   const q = new URLSearchParams(location.search);
@@ -40,7 +40,7 @@ export default function Templates() {
   useEffect(() => {
     (async () => {
       try {
-        await fetchPublicTemplatesByType(pageType);
+        await fetchTemplatesByType(pageType);
       } catch (e) {
         console.error(e);
       }
@@ -87,7 +87,7 @@ export default function Templates() {
 
           {isLoading && <p>Loading templates...</p>}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {publicTemplates.map((t) => (
+            {templates.map((t) => (
               <div key={t._id} className="card p-4 border rounded">
                 {t.previewUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element

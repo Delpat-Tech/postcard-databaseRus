@@ -139,9 +139,23 @@ export default function Order() {
     try {
       let proof;
       if (productType === "postcard") {
+        // Merge global design variables into the recipient.variables so the proof
+        // generation receives personalization variables as an array of { key, value }
+        const firstRecipient = currentOrder.recipients[0];
+        const globalVars = currentOrder.globalDesignVariables || [];
+        const mergedRecipient = {
+          ...firstRecipient,
+          variables: [
+            // start with recipient-specific variables (if any)
+            ...(firstRecipient?.variables || []),
+            // then append global design variables (these may be used to fill template fields)
+            ...globalVars.map((v: any) => ({ key: v.key, value: v.value })),
+          ],
+        };
+
         proof = await generateProofByTemplate(
           currentOrder.designSize,
-          currentOrder.recipients[0],
+          mergedRecipient,
           "jpg",
           currentOrder.templateId,
           currentOrder.front,
@@ -151,8 +165,18 @@ export default function Order() {
         setProofBack(proof.back);
         setCurrentOrder({ frontproof: proof.front, backproof: proof.back });
       } else if (productType === "letter") {
+        const firstRecipient = currentOrder.recipients[0];
+        const globalVars = currentOrder.globalDesignVariables || [];
+        const mergedRecipient = {
+          ...firstRecipient,
+          variables: [
+            ...(firstRecipient?.variables || []),
+            ...globalVars.map((v: any) => ({ key: v.key, value: v.value })),
+          ],
+        };
+
         proof = await generateletterProofByTemplate(
-          currentOrder.recipients[0],
+          mergedRecipient,
           currentOrder.font,
           currentOrder.envelopeType,
           currentOrder.fontColor,

@@ -108,4 +108,5 @@ export interface Template {
     isPublic: boolean;
     createdAt: Date;
     updatedAt: Date;
+    rawData: any;
 }

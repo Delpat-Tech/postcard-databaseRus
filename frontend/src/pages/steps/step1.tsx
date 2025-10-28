@@ -22,6 +22,7 @@ export default function Step1UploadAndSelect() {
     const navigate = useNavigate();
 
     const selectedTemplate = templates.find((t) => t._id === currentOrder.templateId) || null;
+
     const pricingTable: PricingRule[] = [
         { sizeKey: "46", sizeLabel: "4.25 x 6", mailClass: "FirstClass", one: 1.99, twoTo99: 0.99, hundredUp: 0.89 },
         { sizeKey: "68", sizeLabel: "6 x 8.5", mailClass: "Standard", one: 2.15, twoTo99: 1.14, hundredUp: 1.04 },
@@ -129,7 +130,7 @@ export default function Step1UploadAndSelect() {
                         </div>
                         <div className="flex-1">
                             <div className="font-semibold">{currentOrder.designName || selectedTemplate?.name || "Selected template"}</div>
-                            <div className="text-sm text-gray-500">{currentOrder.designSize || selectedTemplate?.size}</div>
+                            <div className="text-sm text-gray-500">{(prices.find(p => p.sizeLabel === currentOrder.designSize)?.sizeLabel) || selectedTemplate?.size}</div>
                             <div className="mt-3 flex items-center gap-3">
                                 <button
                                     onClick={() => navigate("/templates")}

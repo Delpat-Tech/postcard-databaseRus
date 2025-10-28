@@ -131,6 +131,16 @@ class PostcardService {
 
             try {
                 proofPayload.returnAddress = recipient.returnAddress || null;
+                // Normalize recipient variables: accept [{key,value}] or [{name,value}] and forward
+                const rawVars = recipient.variables || [];
+                const normalizedVars = (rawVars || []).map((v) => {
+                    if (v == null) return null;
+                    // support both { key, value } and { name, value }
+                    const key = v.key || v.name || v.variableKey || null;
+                    const value = v.value ?? v.variableValue ?? v.val ?? null;
+                    return key ? { key, value } : { key: String(Object.keys(v)[0] || ""), value: String(Object.values(v)[0] || "") };
+                }).filter(Boolean);
+
                 proofPayload.recipient = recipient.recipient || {
                     company: recipient.company || "",
                     firstName: recipient.firstName,
@@ -140,8 +150,13 @@ class PostcardService {
                     city: recipient.city,
                     state: recipient.state,
                     zipCode: recipient.zipCode,
-                    variables: recipient.variables || [],
+                    variables: normalizedVars,
                 };
+                // Also attach a variables_map for convenience (key->value) in case PCM integration prefers a map
+                proofPayload.recipient.variables_map = normalizedVars.reduce((acc, v) => {
+                    acc[v.key] = v.value;
+                    return acc;
+                }, {});
             } catch (recipientError) {
                 console.error("Error preparing recipient data:", recipientError);
                 throw new Error("Failed to prepare recipient for proof generation");
@@ -195,6 +210,14 @@ class PostcardService {
 
             try {
                 proofPayload.returnAddress = recipient.returnAddress || null;
+                const rawVars = recipient.variables || [];
+                const normalizedVars = (rawVars || []).map((v) => {
+                    if (v == null) return null;
+                    const key = v.key || v.name || v.variableKey || null;
+                    const value = v.value ?? v.variableValue ?? v.val ?? null;
+                    return key ? { key, value } : { key: String(Object.keys(v)[0] || ""), value: String(Object.values(v)[0] || "") };
+                }).filter(Boolean);
+
                 proofPayload.recipient = recipient.recipient || {
                     company: recipient.company || "",
                     firstName: recipient.firstName,
@@ -204,8 +227,12 @@ class PostcardService {
                     city: recipient.city,
                     state: recipient.state,
                     zipCode: recipient.zipCode,
-                    variables: recipient.variables || [],
+                    variables: normalizedVars,
                 };
+                proofPayload.recipient.variables_map = normalizedVars.reduce((acc, v) => {
+                    acc[v.key] = v.value;
+                    return acc;
+                }, {});
             } catch (recipientError) {
                 console.error("Error preparing recipient data:", recipientError?.message);
                 throw new Error("Failed to prepare recipient for proof generation");
@@ -231,17 +258,29 @@ class PostcardService {
     formatOrderForPCMpostcard(order) {
         return {
             mailClass: order.mailClass,
-            recipients: (order.recipients || []).map(r => ({
-                firstName: r.firstName,
-                lastName: r.lastName,
-                company: r.company,
-                address: r.address1,
-                address2: r.address2,
-                city: r.city,
-                state: r.state,
-                zip_code: r.zipCode,
-                external_reference: r.externalReferenceNumber,
-            })),
+            recipients: (order.recipients || []).map(r => {
+                // merge global design variables into recipient variables, with recipient overrides winning
+                const globalVars = order.globalDesignVariables || [];
+                const recipientVars = r.variables || [];
+                const mergedMap = {};
+                (globalVars || []).forEach(v => { if (v && v.key) mergedMap[v.key] = v.value; });
+                (recipientVars || []).forEach(v => { if (v && v.key) mergedMap[v.key] = v.value; });
+                const mergedArray = Object.keys(mergedMap).map(k => ({ key: k, value: mergedMap[k] }));
+
+                return {
+                    firstName: r.firstName,
+                    lastName: r.lastName,
+                    company: r.company,
+                    address: r.address1,
+                    address2: r.address2,
+                    city: r.city,
+                    state: r.state,
+                    zip_code: r.zipCode,
+                    external_reference: r.externalReferenceNumber,
+                    variables: mergedArray,
+                    variables_map: mergedMap,
+                };
+            }),
             mailDate: order.mailDate,
             return_address: order.returnAddress,
             ...(order.front && order.back
@@ -259,17 +298,28 @@ class PostcardService {
     formatOrderForPCMletter(order) {
         return {
             mailClass: order.mailClass,
-            recipients: (order.recipients || []).map(r => ({
-                firstName: r.firstName,
-                lastName: r.lastName,
-                company: r.company,
-                address: r.address1,
-                address2: r.address2,
-                city: r.city,
-                state: r.state,
-                zip_code: r.zipCode,
-                external_reference: r.externalReferenceNumber,
-            })),
+            recipients: (order.recipients || []).map(r => {
+                const globalVars = order.globalDesignVariables || [];
+                const recipientVars = r.variables || [];
+                const mergedMap = {};
+                (globalVars || []).forEach(v => { if (v && v.key) mergedMap[v.key] = v.value; });
+                (recipientVars || []).forEach(v => { if (v && v.key) mergedMap[v.key] = v.value; });
+                const mergedArray = Object.keys(mergedMap).map(k => ({ key: k, value: mergedMap[k] }));
+
+                return {
+                    firstName: r.firstName,
+                    lastName: r.lastName,
+                    company: r.company,
+                    address: r.address1,
+                    address2: r.address2,
+                    city: r.city,
+                    state: r.state,
+                    zip_code: r.zipCode,
+                    external_reference: r.externalReferenceNumber,
+                    variables: mergedArray,
+                    variables_map: mergedMap,
+                };
+            }),
             mailDate: order.mailDate,
             return_address: order.returnAddress,
             ...(order.front && order.back
