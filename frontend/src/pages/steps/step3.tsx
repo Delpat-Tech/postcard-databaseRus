@@ -6,7 +6,7 @@ import RecipientList from "../../components/RecipientList";
 import { useOrderStore } from "../../store/orderStore";
 import { useTemplateStore } from "../../store/templateStore";
 
-export default function Step3Recipients({ addRecipient }) {
+export default function Step3Recipients({ addRecipient }: { addRecipient: (r: any) => void }) {
     const { currentOrder } = useOrderStore();
     const templates = useTemplateStore((s) => s.templates);
     const selectedTemplate = templates.find((t) => t._id === currentOrder.templateId) || null;
@@ -68,7 +68,7 @@ export default function Step3Recipients({ addRecipient }) {
                         key={key}
                         label={key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
                         name={key}
-                        value={value}
+                        value={String(value || "")}
                         onChange={(val) => setRecipientForm({ ...recipientForm, [key]: val })}
                         required={["firstName", "lastName", "address1", "city", "state", "zipCode"].includes(key)}
                     />

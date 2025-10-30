@@ -11,7 +11,7 @@ type Rule = {
     hundredUp: number;
 };
 
-const TYPES = ["postcard", "letter", "brochure", "bookmark"] as const;
+const TYPES = ["postcard", "letter"] as const; //, "brochure", "bookmark"
 // mapping of size keys to labels
 const SIZE_OPTIONS: Record<string, string> = {
     "46": "4.25 x 6",

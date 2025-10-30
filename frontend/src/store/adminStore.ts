@@ -20,6 +20,7 @@ interface AdminStore {
     fetchPrices: (type?: string) => Promise<any>;
     updatePrices: (type: string, payload: { pricing: any[] }) => Promise<any>;
     setTemplateType: (templateId: string, type: string) => Promise<any>;
+    setTemplatePersonalize: (templateId: string, allowPersonalize: boolean) => Promise<any>;
 }
 
 export const useAdminStore = create<AdminStore>((set, get) => ({
@@ -300,6 +301,27 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
                 body: JSON.stringify({ type }),
             });
             if (!response.ok) throw new Error("Failed to set template type");
+            const updated = await response.json();
+            set((state) => ({ templates: state.templates.map((t) => (t._id === templateId ? updated : t)), isLoading: false }));
+            return updated;
+        } catch (error) {
+            set({ error: error instanceof Error ? error.message : String(error), isLoading: false });
+            throw error;
+        }
+    },
+    setTemplatePersonalize: async (templateId: string, allowPersonalize: boolean) => {
+        set({ isLoading: true, error: null });
+        try {
+            const token = (localStorage.getItem("token") || null);
+            const response = await fetch(`${API_BASE_URL}/templates/${templateId}/personalize`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({ allowPersonalize }),
+            });
+            if (!response.ok) throw new Error("Failed to update personalize flag");
             const updated = await response.json();
             set((state) => ({ templates: state.templates.map((t) => (t._id === templateId ? updated : t)), isLoading: false }));
             return updated;

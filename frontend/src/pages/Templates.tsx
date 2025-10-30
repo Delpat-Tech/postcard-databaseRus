@@ -120,13 +120,15 @@ export default function Templates() {
                       Select
                     </button>
 
-                    <button
-                      onClick={() => openEditor(t._id)}
-                      className="px-4 py-2 border rounded text-blue-600 hover:bg-gray-50"
-                      disabled={loadingEditor === t._id}
-                    >
-                      {loadingEditor === t._id ? "Opening…" : "Personalize"}
-                    </button>
+                    {t.allowPersonalize !== false && (
+                      <button
+                        onClick={() => openEditor(t._id)}
+                        className="px-4 py-2 border rounded text-blue-600 hover:bg-gray-50"
+                        disabled={loadingEditor === t._id}
+                      >
+                        {loadingEditor === t._id ? "Opening…" : "Personalize"}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

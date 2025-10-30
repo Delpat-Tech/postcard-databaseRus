@@ -138,35 +138,38 @@ export default function Step1UploadAndSelect() {
                                 >
                                     Change
                                 </button>
-                                <button
-                                    onClick={async () => {
-                                        try {
-                                            const id = selectedTemplate?._id || currentOrder.templateId || "";
-                                            if (!id) throw new Error("No template id");
-                                            if (currentOrder.isCustomDesign) {
-                                                const url = await openTemplateSimpleEditor(id);
-                                                window.open(url, "_blank");
-                                            } else {
-                                                const template = await openTemplateEditor(id);
-                                                setCurrentOrder({
-                                                    templateId: template._id,
-                                                    designId: template.pcmDesignId || template._id,
-                                                    designName: template.name,
-                                                    designSize: (prices.find(p => p.sizeLabel === template.size)?.sizeKey) || pricingTable.find(p => p.sizeLabel === template.size)?.sizeKey,
-                                                    isCustomDesign: true,
-                                                });
-                                                navigate("/order");
-                                                window.open(template.url, "_blank");
+                                {selectedTemplate.allowPersonalize !== false &&
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                const id = selectedTemplate?._id || currentOrder.templateId || "";
+                                                if (!id) throw new Error("No template id");
+                                                if (currentOrder.isCustomDesign) {
+                                                    const url = await openTemplateSimpleEditor(id);
+                                                    window.open(url, "_blank");
+                                                } else {
+                                                    const template = await openTemplateEditor(id);
+                                                    setCurrentOrder({
+                                                        templateId: template._id,
+                                                        designId: template.pcmDesignId || template._id,
+                                                        designName: template.name,
+                                                        designSize: (prices.find(p => p.sizeLabel === template.size)?.sizeKey) || pricingTable.find(p => p.sizeLabel === template.size)?.sizeKey,
+                                                        isCustomDesign: true,
+                                                    });
+                                                    navigate("/order");
+                                                    // only open editor if template allows personalization
+                                                    window.open(template.url, "_blank");
+                                                }
+                                            } catch (e) {
+                                                console.error(e);
+                                                alert(e instanceof Error ? e.message : String(e));
                                             }
-                                        } catch (e) {
-                                            console.error(e);
-                                            alert(e instanceof Error ? e.message : String(e));
-                                        }
-                                    }}
-                                    className="px-3 py-2 bg-gray-100 border rounded"
-                                >
-                                    Personalize
-                                </button>
+                                        }}
+                                        className="px-3 py-2 bg-gray-100 border rounded"
+                                    >
+                                        Personalize
+                                    </button>
+                                }
                             </div>
                         </div>
                     </div>

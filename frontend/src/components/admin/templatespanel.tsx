@@ -162,8 +162,8 @@ export default function TemplatesPanel() {
                                     >
                                         <option value="postcard">Postcard</option>
                                         <option value="letter">Letter</option>
-                                        <option value="brochure">Brochure</option>
-                                        <option value="bookmark">Bookmark</option>
+                                        {/* <option value="brochure">Brochure</option>
+                                        <option value="bookmark">Bookmark</option> */}
                                     </select>
 
                                     <div className="flex flex-wrap items-center gap-2">
@@ -203,6 +203,22 @@ export default function TemplatesPanel() {
                                             }}
                                         >
                                             Delete (PostcardMania)
+                                        </Button>
+                                        <Button
+                                            variant={template.allowPersonalize ? "primary" : "secondary"}
+                                            className="text-sm px-2 py-1"
+                                            onClick={async () => {
+                                                try {
+                                                    await useAdminStore.getState().setTemplatePersonalize(template._id, !template.allowPersonalize);
+                                                    await fetchAllTemplates();
+                                                    alert(`Template personalize set to ${!template.allowPersonalize}`);
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    alert("Failed to toggle personalize");
+                                                }
+                                            }}
+                                        >
+                                            {template.allowPersonalize ? "Disable Personalize" : "Enable Personalize"}
                                         </Button>
                                     </div>
                                 </div>

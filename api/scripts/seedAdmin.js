@@ -4,10 +4,7 @@ const bcrypt = require("bcrypt");
 const AdminUser = require("../src/models/AdminUser");
 
 async function seed() {
-  await mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+  await mongoose.connect(process.env.MONGO_URI);
   const username = process.env.ADMIN_USERNAME || "admin";
   const password = process.env.ADMIN_PASSWORD || "changeme";
   const existing = await AdminUser.findOne({ username });

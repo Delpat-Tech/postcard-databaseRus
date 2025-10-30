@@ -12,6 +12,8 @@ const TemplateSchema = new mongoose.Schema({
   // store the original PostcardMania design payload so we don't lose any data
   rawData: { type: mongoose.Schema.Types.Mixed },
   isPublic: { type: Boolean, default: false },
+  // whether this template may be personalized by end users (frontend will show/hide personalize actions)
+  allowPersonalize: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

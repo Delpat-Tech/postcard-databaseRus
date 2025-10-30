@@ -106,6 +106,7 @@ export interface Template {
     url?: string;
     type?: string;
     isPublic: boolean;
+    allowPersonalize?: boolean;
     createdAt: Date;
     updatedAt: Date;
     rawData: any;

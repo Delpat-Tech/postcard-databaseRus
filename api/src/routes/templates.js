@@ -187,6 +187,23 @@ router.put("/:id/public", adminAuth, async (req, res) => {
   }
 });
 
+// PUT /api/templates/:id/personalize - Toggle whether template can be personalized (admin only)
+router.put("/:id/personalize", adminAuth, async (req, res) => {
+  try {
+    const { allowPersonalize } = req.body;
+    const template = await Template.findByIdAndUpdate(
+      req.params.id,
+      { allowPersonalize: !!allowPersonalize, updatedAt: new Date() },
+      { new: true }
+    );
+
+    if (!template) return res.status(404).json({ error: "Template not found" });
+    res.json(template);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // PUT /api/templates/:id/type - Set template type (admin only)
 router.put("/:id/type", adminAuth, async (req, res) => {
   try {
