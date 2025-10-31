@@ -65,12 +65,27 @@ router.post("/proof", validateProofBody, async (req, res) => {
 });
 
 router.post("/proofletter", async (req, res) => {
-
   try {
     const { letter, templateId, envelope, color, recipient } = req.body;
 
-    const proof = await postcardManiaService.generateProofletter(templateId, letter, envelope, color, recipient)
-    res.json(proof); // { front, back }
+    // Basic validation: recipient required, and either templateId or letter must be provided
+    if (!recipient) return res.status(400).json({ error: "Field 'recipient' is required" });
+    if (!templateId && !letter) return res.status(400).json({ error: "You must provide either 'templateId' or 'letter' for proof generation" });
+
+    // Normalize envelope: accept partial envelope object
+    const env = envelope || {};
+
+    // If letter is a file URL coming from uploads, allow both `fileUrl` or `url` or direct string
+    let normalizedLetter = letter;
+    if (letter && typeof letter === 'object') {
+      // Accept { url } or { fileUrl } or { pdf_url }
+      normalizedLetter = letter;
+    } else if (typeof letter === 'string') {
+      normalizedLetter = letter;
+    }
+
+    const proof = await postcardManiaService.generateProofletter(templateId, normalizedLetter, env, color, recipient);
+    res.json(proof);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

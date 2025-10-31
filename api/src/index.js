@@ -10,6 +10,7 @@ console.error = function (...args) {
   originalError(`[error ${timestamp}]`, ...args);
 }
 const path = require("path");
+const fs = require("fs");
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 const express = require("express");
 const mongoose = require("mongoose");
@@ -22,6 +23,7 @@ const templateRoutes = require("./routes/templates");
 const orderRoutes = require("./routes/orders");
 const adminRoutes = require("./routes/admin");
 const payRoutes = require("./routes/payment");
+const uploadRoutes = require("./routes/uploads");
 const app = express();
 const PORT = process.env.PORT || 4000;
 const morganMiddleware = morgan(function (tokens, req, res) {
@@ -77,12 +79,22 @@ app.use(
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Ensure uploads folder exists and serve it statically at /uploads
+const uploadsDir = path.join(__dirname, "..", "uploads");
+try {
+  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+} catch (err) {
+  console.error("Failed to ensure uploads directory:", err?.message || err);
+}
+app.use("/uploads", express.static(uploadsDir));
+
 // routes
 app.use("/api/auth", authRoutes);
 app.use("/api/templates", templateRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payments", payRoutes);
+app.use("/api/uploads", uploadRoutes);
 
 // health
 app.get("/health", (req, res) => res.json({ ok: true, time: new Date() }));

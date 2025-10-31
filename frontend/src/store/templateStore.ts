@@ -201,7 +201,9 @@ export const useTemplateStore = create<TemplateStore>((set) => ({
 
             if (!response.ok) throw new Error("Failed to generate proof");
             const data = await response.json();
-            return { front: data.pdf };
+            // PCM may return different shapes: { pdf }, { front }, { pdf_url } or { pdf: { url } }
+            const pdfCandidate = data?.pdf || data?.front || data?.pdf_url || (data?.pdf && data.pdf.url);
+            return { front: pdfCandidate };
         } catch (error) {
             set({ error: error instanceof Error ? error.message : String(error) });
             throw error;

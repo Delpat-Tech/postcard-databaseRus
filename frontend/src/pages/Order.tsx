@@ -182,7 +182,7 @@ export default function Order() {
           currentOrder.fontColor,
           currentOrder.color,
           currentOrder.templateId,
-          currentOrder.front
+          currentOrder.fileUrl ? currentOrder.fileUrl : currentOrder.front
         );
         setProofFront(proof.front);
         setCurrentOrder({ frontproof: proof.front });

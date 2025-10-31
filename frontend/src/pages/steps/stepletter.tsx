@@ -2,10 +2,14 @@
 import { useState } from "react";
 import { useOrderStore } from "../../store/orderStore";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function Step1Letter() {
     const { currentOrder, setCurrentOrder } = useOrderStore();
     const [frontHTML, setFrontHTML] = useState(currentOrder.front || "");
     const [url, setUrl] = useState(currentOrder.fileUrl || "");
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
 
     const envelopeFonts = [
         "Bradley Hand",
@@ -37,16 +41,44 @@ export default function Step1Letter() {
                         setCurrentOrder({ front: e.target.value });
                     }}
                 />
-                <input
-                    type="url"
-                    placeholder="https://example.com/letter.pdf"
-                    className="w-full border rounded p-2"
-                    value={url}
-                    onChange={(e) => {
-                        setUrl(e.target.value);
-                        setCurrentOrder({ fileUrl: e.target.value });
-                    }}
-                />
+                {/* File upload for letter (PDF) */}
+                <div className="flex items-center gap-2">
+                    <input
+                        type="file"
+                        accept="application/pdf"
+                        className="border rounded p-1"
+                        onChange={async (e) => {
+                            const f = e.target.files && e.target.files[0];
+                            if (!f) return;
+                            setUploadError(null);
+                            setIsUploading(true);
+                            try {
+                                const fd = new FormData();
+                                fd.append("letterPdf", f);
+                                const res = await fetch(`${API_BASE_URL}/uploads/letter`, {
+                                    method: "POST",
+                                    body: fd,
+                                });
+                                if (!res.ok) {
+                                    const err = await res.json().catch(() => ({}));
+                                    throw new Error(err?.error || `Upload failed: ${res.status}`);
+                                }
+                                const data = await res.json();
+                                setUrl(data.url);
+                                setCurrentOrder({ fileUrl: data.url });
+                            } catch (err) {
+                                setUploadError(err instanceof Error ? err.message : String(err));
+                            } finally {
+                                setIsUploading(false);
+                            }
+                        }}
+                    />
+                    {isUploading ? <span className="text-sm">Uploading...</span> : null}
+                    {url ? (
+                        <a className="text-sm text-blue-600 ml-2" href={url} target="_blank" rel="noreferrer">View uploaded PDF</a>
+                    ) : null}
+                </div>
+                {uploadError ? <div className="text-sm text-red-600">{uploadError}</div> : null}
             </div>
 
             {/* Boolean Options */}
@@ -86,7 +118,7 @@ export default function Step1Letter() {
                         <select
                             className="w-full border rounded p-2"
                             value={currentOrder.envelopeType || ""}
-                            onChange={(e) => setCurrentOrder({ envelopeType: e.target.value })}
+                            onChange={(e) => setCurrentOrder({ envelopeType: e.target.value as any })}
                         >
                             <option value="">Select type</option>
                             {envelopeTypes.map((t) => (
@@ -100,7 +132,7 @@ export default function Step1Letter() {
                         <select
                             className="w-full border rounded p-2"
                             value={currentOrder.font || ""}
-                            onChange={(e) => setCurrentOrder({ font: e.target.value })}
+                            onChange={(e) => setCurrentOrder({ font: e.target.value as any })}
                         >
                             <option value="">Select font</option>
                             {envelopeFonts.map((f) => (
@@ -114,7 +146,7 @@ export default function Step1Letter() {
                         <select
                             className="w-full border rounded p-2"
                             value={currentOrder.fontColor || ""}
-                            onChange={(e) => setCurrentOrder({ fontColor: e.target.value })}
+                            onChange={(e) => setCurrentOrder({ fontColor: e.target.value as any })}
                         >
                             <option value="">Select color</option>
                             {fontColors.map((f) => (
@@ -128,7 +160,7 @@ export default function Step1Letter() {
                         <select
                             className="w-full border rounded p-2"
                             value={currentOrder.exceptionalAddressingType || ""}
-                            onChange={(e) => setCurrentOrder({ exceptionalAddressingType: e.target.value })}
+                            onChange={(e) => setCurrentOrder({ exceptionalAddressingType: e.target.value as any })}
                         >
                             <option value="">Select type</option>
                             {exceptionalAddressingTypes.map((t) => (

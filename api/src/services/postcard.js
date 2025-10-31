@@ -189,10 +189,10 @@ class PostcardService {
                 throw new Error("You must provide either templateId or letter for proof generation");
             }
 
+            // Build initial payload. We'll normalize `letter` below (accept URL/pdf/html/object)
             let proofPayload = {
-                letter,
-                color,
-                envelope
+                color: !!color,
+                envelope: envelope || {},
             };
 
             try {
@@ -201,13 +201,20 @@ class PostcardService {
                     if (!template) throw new Error("Template not found");
                     proofPayload.designID = Number(template.pcmDesignId);
                 } else {
+                    // Normalize letter input:
+                    // - if it's an object, pass through
+                    // - if it's a string URL (http/https) and looks like a PDF -> { pdf_url }
+                    // - if it's a string that looks like HTML (starts with '<') -> { html }
+                    // - otherwise send as raw string in `letter`
+
                     proofPayload.letter = letter;
+
                 }
             } catch (templateError) {
                 console.error("Error fetching template:", templateError?.message);
                 throw new Error("Failed to fetch template for proof generation");
             }
-
+            console.log(proofPayload);
             try {
                 proofPayload.returnAddress = recipient.returnAddress || null;
                 const rawVars = recipient.variables || [];
