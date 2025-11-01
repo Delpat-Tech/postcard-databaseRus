@@ -47,8 +47,8 @@ export default function TemplatesPanel() {
     templateFilter === "all"
       ? true
       : templateFilter === "public"
-      ? t.isPublic
-      : !t.isPublic
+        ? t.isPublic
+        : !t.isPublic
   );
 
   const handleImportDesigns = async () => {
@@ -75,11 +75,10 @@ export default function TemplatesPanel() {
               <button
                 key={f}
                 onClick={() => setTemplateFilter(f as any)}
-                className={`px-3 py-1 text-sm ${
-                  templateFilter === f
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`px-3 py-1 text-sm ${templateFilter === f
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
               </button>
@@ -151,11 +150,10 @@ export default function TemplatesPanel() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-3">
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      template.isPublic
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${template.isPublic
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                      }`}
                   >
                     {template.isPublic ? "Public" : "Private"}
                   </span>
@@ -176,14 +174,12 @@ export default function TemplatesPanel() {
                       }
                     />
                     <div
-                      className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${
-                        template.isPublic ? "bg-green-500" : "bg-gray-300"
-                      }`}
+                      className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${template.isPublic ? "bg-green-500" : "bg-gray-300"
+                        }`}
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow transform transition-transform ${
-                          template.isPublic ? "translate-x-5" : ""
-                        }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow transform transition-transform ${template.isPublic ? "translate-x-5" : ""
+                          }`}
                       ></div>
                     </div>
                     <span className="text-sm text-gray-700">
@@ -225,16 +221,14 @@ export default function TemplatesPanel() {
                       }
                     />
                     <div
-                      className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${
-                        template.allowPersonalize
-                          ? "bg-indigo-600"
-                          : "bg-gray-300"
-                      }`}
+                      className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${template.allowPersonalize
+                        ? "bg-indigo-600"
+                        : "bg-gray-300"
+                        }`}
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow transform transition-transform ${
-                          template.allowPersonalize ? "translate-x-5" : ""
-                        }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow transform transition-transform ${template.allowPersonalize ? "translate-x-5" : ""
+                          }`}
                       ></div>
                     </div>
                     <span className="text-sm text-gray-700">
@@ -255,28 +249,8 @@ export default function TemplatesPanel() {
               {/* Footer: Set Type (left) and Delete (right) */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <label className="text-sm text-gray-600 mr-1">Set Type</label>
-                  <select
-                    value={template.type || "postcard"}
-                    onChange={async (e) => {
-                      const newType = e.target.value;
-                      try {
-                        await useAdminStore
-                          .getState()
-                          .setTemplateType(template._id, newType);
-                        alert("Template type updated");
-                        await fetchAllTemplates();
-                      } catch (err) {
-                        console.error(err);
-                        alert("Failed to set template type");
-                      }
-                    }}
-                    className="border rounded px-2 py-1 text-sm w-28 bg-white appearance-none"
-                    aria-label={`Set type for ${template.name}`}
-                  >
-                    <option value="postcard">Postcard</option>
-                    <option value="letter">Letter</option>
-                  </select>
+                  <label className="text-sm text-gray-600 mr-1">{"Product Type =>"}{template.type || "postcard"}</label>
+
                 </div>
 
                 <div className="flex items-center">
@@ -330,7 +304,7 @@ export default function TemplatesPanel() {
                               console.error(e);
                               alert(
                                 "Failed to remove template: " +
-                                  (e instanceof Error ? e.message : String(e))
+                                (e instanceof Error ? e.message : String(e))
                               );
                             }
                           }}
@@ -356,7 +330,7 @@ export default function TemplatesPanel() {
                               console.error(e);
                               alert(
                                 "Failed to permanently delete template: " +
-                                  (e instanceof Error ? e.message : String(e))
+                                (e instanceof Error ? e.message : String(e))
                               );
                             }
                           }}
