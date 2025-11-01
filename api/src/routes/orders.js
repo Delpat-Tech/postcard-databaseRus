@@ -5,38 +5,25 @@ const Tempalate = require("../models/Template");
 const { adminAuth } = require("../middleware/auth");
 const postcardManiaService = require("../services/postcard");
 
-// --- Pricing Definitions (Moved from Frontend) ---
-
-// Note: Removed sizeLabel as it's not needed for backend calculation, 
-// and adjusted the structure for plain JavaScript.
-const pricingTable = [
-  { sizeKey: "46", mailClass: "FirstClass", one: 1.99, twoTo99: 0.99, hundredUp: 0.89 },
-  { sizeKey: "68", mailClass: "Standard", one: 2.15, twoTo99: 1.14, hundredUp: 1.04 },
-  { sizeKey: "68", mailClass: "FirstClass", one: 2.35, twoTo99: 1.24, hundredUp: 1.10 },
-  { sizeKey: "611", mailClass: "Standard", one: 2.55, twoTo99: 1.41, hundredUp: 1.31 },
-  { sizeKey: "611", mailClass: "FirstClass", one: 2.75, twoTo99: 1.51, hundredUp: 1.41 },
-  { sizeKey: "811", mailClass: "Standard", one: 2.95, twoTo99: 1.57, hundredUp: 1.47 },
-  { sizeKey: "811", mailClass: "FirstClass", one: 3.25, twoTo99: 1.77, hundredUp: 1.67 },
-];
+const Price = require("../models/Price");
 
 /**
- * Calculates the price per piece based on size, mail class, and quantity.
- * @param {string} size - The design size key (e.g., "46").
- * @param {('FirstClass'|'Standard')} mailClass - The mailing class.
- * @param {number} quantity - The number of recipients/pieces.
- * @returns {number} The price per piece.
+ * Calculate price per piece using pricing rules fetched from DB.
+ * @param {Array} rules - Array of pricing rules for the product type
+ * @param {string} size - design size key
+ * @param {string} mailClass - mail class
+ * @param {number} quantity - recipient count
  */
-function calculatePricePerPiece(size, mailClass, quantity) {
-  // Find the matching pricing rule
-  const rule = pricingTable.find(r => r.sizeKey === size && r.mailClass === mailClass);
+function calculatePricePerPieceFromRules(rules, size, mailClass, quantity) {
+  if (!Array.isArray(rules) || rules.length === 0) return 0;
+  const rule = rules.find((r) => r.sizeKey === size && r.mailClass === mailClass);
   if (!rule) return 0;
 
-  // Determine the price tier
   if (quantity === 1) return rule.one;
   if (quantity >= 2 && quantity <= 99) return rule.twoTo99;
   if (quantity >= 100) return rule.hundredUp;
 
-  return 0; // Default case
+  return 0;
 }
 
 // ✅ POST /api/orders - Create draft order with custom validation and pricing
@@ -94,7 +81,19 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Design size and mail class are required for pricing calculation." });
     }
 
-    const pricePerPiece = calculatePricePerPiece(designSize, mailClass, recipientCount);
+    // Determine product type (default to postcard when not provided)
+    const productType = data.productType || "postcard";
+
+    // Fetch pricing rules from DB
+    let pricePerPiece = 0;
+    try {
+      const priceDoc = await Price.findOne();
+      const rules = (priceDoc && priceDoc.pricingByType && priceDoc.pricingByType[productType]) || [];
+      pricePerPiece = calculatePricePerPieceFromRules(rules, designSize, mailClass, recipientCount);
+    } catch (priceErr) {
+      console.error("Error fetching pricing from DB:", priceErr);
+      pricePerPiece = 0;
+    }
     const totalPrice = Number((pricePerPiece * recipientCount).toFixed(2));
 
     if (totalPrice === 0 && recipientCount > 0) {

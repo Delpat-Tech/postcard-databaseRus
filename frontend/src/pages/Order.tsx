@@ -237,8 +237,8 @@ export default function Order() {
         // Letter design needs front content (image/pdf) AND core config (font, envelope, color) 
         const hasFrontContent = !!currentOrder.front || !!currentOrder.fileUrl;
         const hasLetterConfig = !!currentOrder.font && !!currentOrder.envelopeType && !!currentOrder.fontColor;
-
-        return hasFrontContent && hasLetterConfig;
+        const hasDesign = !!currentOrder.templateId
+        return (hasFrontContent || hasDesign) && hasLetterConfig;
       }
       return false;
     }

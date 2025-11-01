@@ -14,17 +14,19 @@ export default function OrderSummaryCard() {
   const size = currentOrder.designSize;
   const mailClass: "FirstClass" | "Standard" = (currentOrder.mailClass || "FirstClass") as any;
   const sizeKey = currentOrder.designSize || "";
+  console.log(currentOrder);
 
   // Ensure prices are loaded into publicStore when an order type is selected
   const fetchPricesByType = usePublicStore.getState().fetchPricesByType;
   useEffect(() => {
-    const type = (currentOrder.designType || "postcard");
+    if (!currentOrder.productType) return;
+    const type = (currentOrder.productType || "postcard");
     if (!serverPricing || serverPricing.length === 0) {
       fetchPricesByType(type).catch(() => {
         /* ignore errors */
       });
     }
-  }, [currentOrder.designType]);
+  }, [currentOrder.productType]);
 
   // use server pricing if available
   function computePrice(size: string, mailClass: "FirstClass" | "Standard", quantity: number) {

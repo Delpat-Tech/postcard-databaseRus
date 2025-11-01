@@ -1,14 +1,14 @@
 import { Link, useParams } from "react-router-dom";
 import { Button } from "../components/FormComponents";
 import { useAdminStore } from "../store/adminStore";
-import { usePublicStore } from "../store/publicStore";
+import { useTemplateStore } from "../store/templateStore";
 import { useEffect } from "react";
 import { useOrderStore } from "../store/orderStore";
 export default function Home() {
   const token = (useAdminStore.getState() as any).token;
   const { type } = useParams();
   const pageType = (type as string) || null;
-  const { templates, fetchTemplatesByType } = usePublicStore();
+  const { templates, fetchTemplatesByType } = useTemplateStore();
   const setCurrentOrder = useOrderStore((s) => s.setCurrentOrder);
 
   useEffect(() => {

@@ -9,7 +9,9 @@ const postcardManiaService = require("../services/postcard");
 // GET /api/admin/designs/import - Import latest designs from PostcardMania
 router.get("/designs/import", adminAuth, async (req, res) => {
   try {
-    const pcmDesigns = (await postcardManiaService.getAllDesigns()).results;
+    const pcmDesignspostcard = (await postcardManiaService.getAllDesigns("postcard")).results;
+    const pcmDesignsletter = (await postcardManiaService.getAllDesigns("letter")).results;
+    const pcmDesigns = pcmDesignspostcard.concat(pcmDesignsletter);
     console.log(`Fetched ${pcmDesigns.length} designs from PostcardMania`);
     console.log(pcmDesigns[0]);
 
@@ -17,7 +19,7 @@ router.get("/designs/import", adminAuth, async (req, res) => {
 
     for (const design of pcmDesigns) {
       const templateData = postcardManiaService.formatDesignForLocal(design);
-      console.log("Formatted design:", templateData);
+      // console.log("Formatted design:", templateData);
 
       if (!templateData.pcmDesignId) {
         console.warn("Skipping design without pcmDesignId:", design);

@@ -29,9 +29,9 @@ class PostcardService {
         await this.authenticate();
     }
 
-    async getAllDesigns() {
+    async getAllDesigns(productType) {
         await this.ensureAuth();
-        const r = await this.client.get('/design');
+        const r = await this.client.get('/design?productType=' + productType);
         return r.data;
     }
 
@@ -85,7 +85,7 @@ class PostcardService {
     }
     async createOrderletter(orderData) {
         await this.ensureAuth();
-        const r = await this.client.post('/order/postcard', orderData);
+        const r = await this.client.post('/order/letter', orderData);
         return r.data;
     }
 
@@ -214,7 +214,6 @@ class PostcardService {
                 console.error("Error fetching template:", templateError?.message);
                 throw new Error("Failed to fetch template for proof generation");
             }
-            console.log(proofPayload);
             try {
                 proofPayload.returnAddress = recipient.returnAddress || null;
                 const rawVars = recipient.variables || [];
@@ -245,6 +244,7 @@ class PostcardService {
                 throw new Error("Failed to prepare recipient for proof generation");
             }
 
+            console.log(proofPayload);
             try {
                 const response = await this.client.post(
                     "/design/generate-proof/letter",
@@ -282,14 +282,14 @@ class PostcardService {
                     address2: r.address2,
                     city: r.city,
                     state: r.state,
-                    zip_code: r.zipCode,
+                    zipCode: r.zipCode,
                     external_reference: r.externalReferenceNumber,
                     variables: mergedArray,
                     variables_map: mergedMap,
                 };
             }),
             mailDate: order.mailDate,
-            return_address: order.returnAddress,
+            returnAddress: order.returnAddress,
             ...(order.front && order.back
                 ? {
                     front: order.front,
@@ -297,7 +297,7 @@ class PostcardService {
                     size: order.designSize,
                 }
                 : {
-                    design_id: order.designId,
+                    designID: Number(order.designId)
                 }),
         };
     }
@@ -321,21 +321,21 @@ class PostcardService {
                     address2: r.address2,
                     city: r.city,
                     state: r.state,
-                    zip_code: r.zipCode,
+                    zipCode: r.zipCode,
                     external_reference: r.externalReferenceNumber,
                     variables: mergedArray,
                     variables_map: mergedMap,
                 };
             }),
             mailDate: order.mailDate,
-            return_address: order.returnAddress,
+            returnAddress: order.returnAddress,
             ...(order.front && order.back
                 ? {
                     letter: order.front,
                     back: order.back,
                 }
                 : {
-                    design_id: order.designId,
+                    designID: order.designId,
                 }),
             insertAddressingPage: order.insertAddressingPage,
             printOnBothSides: order.printOnBothSides,
@@ -354,6 +354,7 @@ class PostcardService {
             size: design.size?.label || "Unknown",
             previewUrl: design.proofFront || design.proofBack || design.proofPDF || null,
             rawData: design,
+            type: design.productType || "postcard",
         };
     }
 
