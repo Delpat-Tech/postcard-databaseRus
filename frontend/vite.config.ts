@@ -8,6 +8,7 @@ export default defineConfig({
     port: 5173,
     allowedHosts: [
       'postcard-databaserus-backend.onrender.com',
+      'pc.bookmarkpostcards.com',
     ],
   },
 });
