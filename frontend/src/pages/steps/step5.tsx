@@ -108,7 +108,7 @@ export default function Step5Payment({ order, onPaymentSuccess }) {
                     />
                 </div>
 
-                <div className="space-y-3">
+                {/* <div className="space-y-3">
                     <button
                         className="bg-yellow-400 text-black px-4 py-2 rounded"
                         onClick={handleTestPayment}
@@ -116,7 +116,7 @@ export default function Step5Payment({ order, onPaymentSuccess }) {
                         Simulate successful payment (TEST)
                     </button>
                     <div className="text-xs text-gray-500">Testing helper: bypasses PayPal and proceeds as if payment succeeded.</div>
-                </div>
+                </div> */}
                 {/* 👆👆👆 END OF PAYPAL INTEGRATION 👆👆👆 */}
                 <small className="block text-center mt-3 text-gray-500">
                     You will be redirected to PayPal for secure payment.
