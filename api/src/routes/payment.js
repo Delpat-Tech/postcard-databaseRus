@@ -57,7 +57,7 @@ router.post("/create-order", async (req, res) => {
     console.log(`✅ [CREATE-ORDER] PayPal order created: ${paypalOrderId}`);
     res.json({ id: paypalOrderId });
   } catch (err) {
-    console.error("❌ [CREATE-ORDER] Error:", err.response?.data || err.message);
+    console.error(" [CREATE-ORDER] Error:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to create PayPal order" });
   }
 });
@@ -111,7 +111,7 @@ router.post(
       );
 
       if (verifyResponse.data.verification_status !== "SUCCESS") {
-        console.error("❌ [WEBHOOK] Invalid signature:", verifyResponse.data);
+        console.error(" [WEBHOOK] Invalid signature:", verifyResponse.data);
         return res.status(400).send("Invalid webhook signature");
       }
 
@@ -121,11 +121,10 @@ router.post(
       const { event_type: eventType, resource } = parsedBody;
 
       if (eventType === "CHECKOUT.ORDER.APPROVED") {
-        const paypalCaptureId = resource.id;
-        const paypalOrderId = resource.supplementary_data?.related_ids?.order_id;
+        const paypalOrderId = resource.id;
 
         if (!paypalOrderId) {
-          console.error("❌ [WEBHOOK] PayPal order ID not found in resource");
+          console.error(" [WEBHOOK] PayPal order ID not found in resource");
           return res.status(400).send("Missing PayPal order ID");
         }
 
@@ -135,7 +134,6 @@ router.post(
           { paypalorderid: paypalOrderId, status: "pending_payment_verification" },
           {
             status: "pending_admin_approval",
-            paypalCaptureId,
             paypalData: resource,
           },
           { new: true }
@@ -144,7 +142,7 @@ router.post(
         if (updatedOrder) {
           console.log("✅ [WEBHOOK] Updated DB Order:", updatedOrder._id);
         } else {
-          console.error("❌ [WEBHOOK] Order not found in DB:", paypalOrderId);
+          console.error(" [WEBHOOK] Order not found in DB:", paypalOrderId);
         }
       } else {
         console.log(`ℹ️ [WEBHOOK] Unhandled event type: ${eventType}`);
@@ -152,7 +150,7 @@ router.post(
 
       res.sendStatus(200);
     } catch (err) {
-      console.error("❌ [WEBHOOK] Error:", err.message || err);
+      console.error(" [WEBHOOK] Error:", err.message || err);
       res.status(500).send("Internal Server Error");
     }
   }
