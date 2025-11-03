@@ -1,6 +1,6 @@
 {
   "name": "proof-approve",
-  "version": "1.0.44",
+  "version": "1.0.45",
   "description": "Proof & Approve Postcard system (Express + MongoDB)",
   "main": "api/src/index.js",
   "scripts": {
