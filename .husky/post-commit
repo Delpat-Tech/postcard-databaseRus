@@ -1,5 +1,12 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# After each commit, bump the package.json patch version and commit it (skip hooks to avoid recursion)
+# Skip version bump if this commit is already a version bump
+commit_msg=$(git log -1 --pretty=%B)
+if echo "$commit_msg" | grep -q "^chore: bump version to"; then
+  echo "Skipping version bump for version commit"
+  exit 0
+fi
+
+# After each commit (except version bumps), bump the package.json patch version and commit it
 npm run bump-version || true
