@@ -14,7 +14,7 @@ interface OrderStore {
   clearCurrentOrder: () => void;
   createOrder: (orderData: Partial<Order>) => Promise<Order>;
   createPaymentOrder: (orderId: string) => Promise<string>;
-  submitOrder: (orderId: string) => Promise<Order>;
+  submitOrder: (orderId: string, paypalid: string) => Promise<Order>;
 }
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
@@ -109,7 +109,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     }
   },
 
-  submitOrder: async (orderId) => {
+  submitOrder: async (orderId, paypalid) => {
     set({ isLoading: true, error: null });
     try {
       const token = localStorage.getItem("token") || null;
@@ -119,6 +119,8 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        body: JSON.stringify({ paypalid }),
+
       });
 
       if (response.ok) {

@@ -159,9 +159,14 @@ router.post("/:id/recipients", async (req, res) => {
 // POST /api/orders/:id/submit - Submit order
 router.post("/:id/submit", async (req, res) => {
   try {
+
+    const { paypalid } = req.body;
+    if (!paypalid) {
+      return res.status(400).json({ error: "paypalid is required to submit order" });
+    }
     const order = await Order.findByIdAndUpdate(
       req.params.id,
-      { status: "pending_admin_approval", updatedAt: new Date() },
+      { status: "pending_payment_verification", paypalorderid: paypalid, updatedAt: new Date() },
       { new: true }
     );
     if (!order) return res.status(404).json({ error: "Order not found" });

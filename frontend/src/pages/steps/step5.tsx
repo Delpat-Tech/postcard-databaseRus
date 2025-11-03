@@ -31,7 +31,8 @@ export default function Step5Payment({ order, onPaymentSuccess }) {
 
     // 2. Function called by PayPal SDK when the user successfully approves the payment
     const handleOnApprove = async (data, actions) => {
-        console.log("Payment Approved by User! PayPal Order ID:", data.orderID);
+        // console.log("Payment Approved by User! PayPal Order ID:", data.orderID);
+
 
         // Since intent: "CAPTURE" is used on the server, the payment is now processing/captured.
         // The rest of the flow (marking order as paid, submitting, etc.) is handled 
@@ -43,7 +44,7 @@ export default function Step5Payment({ order, onPaymentSuccess }) {
             await delay(1500);
 
             // Trigger the success callback to move to the next step/Thank You page
-            onPaymentSuccess();
+            onPaymentSuccess(data.orderID);
         } catch (error) {
             console.error("Error during final client-side step:", error);
             // Handle display error to user

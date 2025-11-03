@@ -110,13 +110,13 @@ export default function Order() {
     }
   };
 
-  const handleSubmitOrder = async () => {
-    clearCurrentOrder();
+  const handleSubmitOrder = async (paypalid: string) => {
+    // clearCurrentOrder();
     if (!order || !order._id) {
       alert("Error: Order ID missing. Cannot submit.");
       return;
     }
-    await submitOrder(order._id);
+    await submitOrder(order._id, paypalid);
     setIsOrderSubmitted(true);
     setCurrentStep(TOTAL_STEPS); // Advance to a success state (index 5)
 
@@ -278,7 +278,7 @@ export default function Order() {
           <p className="text-lg text-gray-700">
             Thank you for your payment. Your order is now being processed.
           </p>
-          <Button onClick={() => setCurrentStep(0)} className="mt-6">
+          <Button onClick={() => { setCurrentStep(0), setIsOrderSubmitted(false) }} className="mt-6">
             Start New Order
           </Button>
         </div>

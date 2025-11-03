@@ -151,13 +151,13 @@ const OrderSchema = new mongoose.Schema(
 
     /** ---------- Paypal Info ---------- */
 
-    paypalCaptureId: String,
-    paypalData: Object,
+    paypalorderid: String,
     /** ---------- System & Status ---------- */
     status: {
       type: String,
       enum: [
         "draft",
+        "pending_payment_verification",
         "pending_admin_approval",
         "submitted_to_pcm",
         "approved",
