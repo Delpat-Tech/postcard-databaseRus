@@ -31,7 +31,7 @@ class PostcardService {
 
     async getAllDesigns(productType) {
         await this.ensureAuth();
-        const r = await this.client.get('/design?productType=' + productType);
+        const r = await this.client.get('/design?productType=' + productType + '&perPage=1000');
         return r.data;
     }
 
