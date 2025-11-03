@@ -11,7 +11,16 @@
     "reset-seed": "node api/scripts/resetSeed.js",
     "dev:frontend": "cd frontend && vite --config vite.config.ts",
     "build:frontend": "cd frontend && vite build --config vite.config.ts",
-    "preview:frontend": "cd frontend && vite preview --config vite.config.ts --host 0.0.0.0 --port 5173"
+    "preview:frontend": "cd frontend && vite preview --config vite.config.ts --host 0.0.0.0 --port 5173",
+    "prepare": "husky install",
+    "lint-staged": "lint-staged",
+    "bump-version": "node scripts/bump-version.js"
+  },
+  "lint-staged": {
+    "frontend/**/*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   },
   "dependencies": {
     "@paypal/checkout-server-sdk": "^1.0.3",
@@ -49,6 +58,8 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
     "nodemon": "^3.1.10",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",

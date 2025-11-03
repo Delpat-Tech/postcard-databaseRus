@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# After each commit, bump the package.json patch version and commit it (skip hooks to avoid recursion)
+npm run bump-version || true

@@ -120,7 +120,7 @@ router.post(
       // ✅ Valid Signature: Process Event
       const { event_type: eventType, resource } = parsedBody;
 
-      if (eventType === "PAYMENT.CAPTURE.COMPLETED") {
+      if (eventType === "CHECKOUT.ORDER.APPROVED") {
         const paypalCaptureId = resource.id;
         const paypalOrderId = resource.supplementary_data?.related_ids?.order_id;
 
