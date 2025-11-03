@@ -90,6 +90,16 @@
 				{
 					"name": "place_order",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -103,7 +113,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"mailClass\": \"FirstClass\",\n  \"recipients\": [\n    {\n      \"company\": \"PCM Integrations\",\n      \"firstName\": \"Alex\",\n      \"lastName\": \"Doe\",\n      \"address\": \"2145 Sunnydale Blvd\",\n      \"address2\": \"Bldg. 102\",\n      \"city\": \"Clearwater\",\n      \"state\": \"FL\",\n      \"zipCode\": \"33765\",\n      \"extRefNbr\": \"string\",\n      \"variables\": [\n        {\n          \"key\": \"string\",\n          \"value\": \"string\"\n        }\n      ]\n    }\n  ],\n  \"size\": \"46\",\n  \"addons\": null,\n  \"designID\": 0,\n  \"front\": \"Raw HTML\",\n  \"back\": \"Raw HTML\",\n  \"addressing\": {\n    \"font\": \"Bradley Hand\",\n    \"fontColor\": \"Black\",\n    \"exceptionalAddressingType\": \"resident\"\n  },\n  \"extRefNbr\": \"string\",\n  \"mailDate\": \"YYYY-MM-DD\",\n  \"returnAddress\": {\n    \"company\": \"PCM Integrations\",\n    \"firstName\": \"Alex\",\n    \"lastName\": \"Doe\",\n    \"address\": \"2145 Sunnydale Blvd\",\n    \"address2\": \"Bldg. 102\",\n    \"city\": \"Clearwater\",\n    \"state\": \"FL\",\n    \"zipCode\": \"33765\"\n  },\n  \"globalDesignVariables\": [\n    {\n      \"key\": \"string\",\n      \"value\": \"string\"\n    }\n  ],\n  \"qrCodeID\": 0\n}",
+							"raw": "{\n    \"mailClass\": \"FirstClass\",\n    \"recipients\": [\n        {\n            \"firstName\": \"Akash\",\n            \"lastName\": \"Patel\",\n            \"company\": \"DelPat\",\n            \"address\": \"1600 Pennsylvania Avenue NW\",\n            \"address2\": \"\",\n            \"city\": \"Washington\",\n            \"state\": \"DC\",\n            \"zipCode\": \"20500\",\n            \"external_reference\": \"\",\n            \"variables\": [],\n            \"variables_map\": {}\n        }\n    ],\n    \"mailDate\": \"2025-11-28\",\n    \"returnAddress\": {\n        \"firstName\": \"Akash\",\n        \"lastName\": \"Patel\",\n        \"company\": \"DelPat\",\n        \"address\": \"B-202 Alpine Heights, Atladara\",\n        \"city\": \"Vadodara\",\n        \"state\": \"Gujarat\",\n        \"zipCode\": \"390012\",\n        \"_id\": \"6905994c213102cdb642d88d\"\n    },\n    \"designID\": 18608\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -280,6 +290,48 @@
 					"response": []
 				},
 				{
+					"name": "get_design",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/design?page=1&perPage=100",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"design"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "perPage",
+									"value": "100"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "edit_design",
 					"request": {
 						"auth": {
@@ -354,6 +406,81 @@
 							"path": [
 								"design",
 								"custom"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get proof",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "\r\n{\r\n    \"format\": \"jpg\",\r\n    \"recipient\": {\r\n        \"id\": \"3ce84fa5-ffbd-4475-8e21-8538061fa2a9\",\r\n        \"firstName\": \"Akash\",\r\n        \"lastName\": \"Patel\",\r\n        \"company\": \"\",\r\n        \"externalReferenceNumber\": \"\",\r\n        \"address\": \"A-39, Shivnery society\",\r\n        \"address2\": \"\",\r\n        \"city\": \"Vadodara\",\r\n        \"state\": \"Gujarat\",\r\n        \"zipCode\": \"390007\"\r\n    },\r\n    \"size\": \"46\",\r\n    \"front\": \"<!doctype html>\\n<html lang=\\\"en\\\">\\n<head>\\n  <meta charset=\\\"utf-8\\\" />\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\" />\\n  <title>Printable Postcard Template</title>\\n  <style>\\n    :root{\\n      --card-w:6in;      /* postcard width for printing */\\n      --card-h:4in;      /* postcard height for printing */\\n      --bleed:0.125in;   /* optional bleed */\\n      --safe:0.25in;     /* safe margin */\\n      --bg:#f8f5f2;\\n      --accent:#b34dff;\\n      --muted:#6b7280;\\n      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;\\n    }\\n\\n    /* Page layout (on screen we'll scale down) */\\n    body{display:flex;gap:24px;align-items:flex-start;justify-content:center;padding:40px;background:linear-gradient(180deg,#eef2ff,white);color:#111}\\n    .toolbar{position:fixed;left:16px;top:16px;display:flex;gap:8px}\\n    button{background:#111;color:white;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}\\n    .wrap{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}\\n\\n    /* Postcard preview container scales to fit screen but retains real print size */\\n    .postcard{\\n      width:var(--card-w);\\n      height:var(--card-h);\\n      box-shadow:0 10px 30px rgba(0,0,0,0.12);\\n      border-radius:12px;\\n      overflow:hidden;\\n      transform-origin:top left;\\n      background:var(--bg);\\n      border:1px solid rgba(0,0,0,0.06);\\n    }\\n\\n    /* scale down preview on small screens */\\n    @media (max-width:1200px){\\n      .postcard{transform:scale(0.75)}\\n    }\\n    @media (max-width:900px){\\n      .wrap{grid-template-columns:1fr}\\n      .postcard{transform:scale(0.6)}\\n    }\\n\\n    /* The two sides: front (image & message) and back (address & stamp) */\\n    .sides{display:flex;height:100%}\\n    .side{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:calc(var(--safe));}\\n\\n    /* Front styling */\\n    .front{background:linear-gradient(135deg,#ffd7ea 0%, #bcd3ff 100%);position:relative}\\n    .photo{height:62%;border-radius:10px;background-size:cover;background-position:center;box-shadow:inset 0 0 30px rgba(0,0,0,0.06)}\\n    .title{font-size:20px;margin-top:8px;font-weight:700}\\n    .message{flex:1;margin-top:8px;font-size:14px;color:var(--muted);line-height:1.4}\\n    .editable{outline:none;min-height:2.2em}\\n\\n    /* Back styling */\\n    .back{background:linear-gradient(180deg,#fff,#fbfbff);font-size:13px;padding:calc(var(--safe));}\\n    .back .top{display:flex;justify-content:space-between;align-items:flex-start}\\n    .stamp{width:1.4in;height:1.4in;border-radius:6px;border:2px dashed rgba(0,0,0,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--muted);}\\n    .address{flex:1;margin-left:12px;border-left:1px dashed rgba(0,0,0,0.08);padding-left:12px;display:flex;flex-direction:column;justify-content:center}\\n    .address .line{height:1.2em;border-bottom:1px dashed rgba(0,0,0,0.06);margin-bottom:8px}\\n    .sender{font-size:11px;color:var(--muted);}\\n\\n    /* small utilities */\\n    label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}\\n\\n    /* Print rules: ensure postcard prints at correct physical size and landscape orientation */\\n    @media print{\\n      body{background:white;padding:0}\\n      .toolbar{display:none}\\n      .wrap{grid-template-columns:1fr}\\n      .postcard{transform:none;box-shadow:none;border-radius:0;border:0}\\n      @page{size: landscape; margin:0}\\n    }\\n\\n    /* Handy small responsive controls below the preview */\\n    .controls{display:flex;flex-direction:column;gap:8px}\\n    .input{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);font-size:13px}\\n\\n    /* Footer note */\\n    .note{font-size:12px;color:var(--muted)}\\n  </style>\\n</head>\\n<body>\\n  <div class=\\\"toolbar\\\">\\n    <button onclick=\\\"window.print()\\\">Print postcard</button>\\n    <button onclick=\\\"downloadPNG()\\\">Download PNG</button>\\n  </div>\\n\\n  <div class=\\\"wrap\\\">\\n    <!-- Live postcard preview -->\\n    <div class=\\\"postcard\\\" id=\\\"postcard\\\">\\n      <div class=\\\"sides\\\">\\n        <div class=\\\"side front\\\" id=\\\"front\\\">\\n          <div class=\\\"photo\\\" id=\\\"photo\\\" contenteditable=\\\"true\\\" title=\\\"Click to edit or paste an image (use URL background via controls)\\\">Add a photo or click the controls to change background</div>\\n          <div>\\n            <div class=\\\"title editable\\\" id=\\\"title\\\" contenteditable=\\\"true\\\">Wish you were here!</div>\\n            <div class=\\\"message editable\\\" id=\\\"message\\\" contenteditable=\\\"true\\\">Dear friend,\\n              <div style=\\\"height:6px\\\"></div>\\n              Having a lovely time — the sunsets are unbelievable and the food is amazing. Can't wait to tell you all about it.\\n            </div>\\n          </div>\\n        </div>\\n\\n        <div class=\\\"side back\\\" id=\\\"back\\\">\\n          <div class=\\\"top\\\">\\n            <div class=\\\"stamp\\\">STAMP</div>\\n            <div class=\\\"address\\\">\\n              <div class=\\\"line editable\\\" contenteditable=\\\"true\\\">Recipient name</div>\\n              <div class=\\\"line editable\\\" contenteditable=\\\"true\\\">Street address</div>\\n              <div class=\\\"line editable\\\" contenteditable=\\\"true\\\">City, State ZIP</div>\\n              <div class=\\\"line editable\\\" contenteditable=\\\"true\\\">Country</div>\\n            </div>\\n          </div>\\n          <div style=\\\"display:flex;justify-content:space-between;align-items:center;margin-top:10px\\\">\\n            <div class=\\\"sender editable\\\" contenteditable=\\\"true\\\">From: Your name</div>\\n            <div class=\\\"note\\\">Postcard size: 6 × 4 in — print single-sided or two pages for front + back</div>\\n          </div>\\n        </div>\\n      </div>\\n    </div>\\n\\n    <!-- Controls -->\\n    <div class=\\\"controls\\\">\\n      <div>\\n        <label for=\\\"bgurl\\\">Front background image URL</label>\\n        <input id=\\\"bgurl\\\" class=\\\"input\\\" placeholder=\\\"paste an image URL and press Apply\\\" />\\n        <div style=\\\"display:flex;gap:8px;margin-top:8px\\\">\\n          <button onclick=\\\"applyBg()\\\">Apply</button>\\n          <button onclick=\\\"resetBg()\\\">Reset</button>\\n        </div>\\n      </div>\\n\\n      <div>\\n        <label>Quick text</label>\\n        <button onclick=\\\"setQuick('Greetings from here!')\\\">Short greeting</button>\\n        <button onclick=\\\"setQuick('Having a wonderful trip — see you soon!')\\\">Travel note</button>\\n        <button onclick=\\\"setQuick('Thinking of you — lots of love!')\\\">Affection</button>\\n      </div>\\n\\n      <div>\\n        <label>Tips</label>\\n        <div class=\\\"note\\\">Click any text on the postcard to edit. Use Print (recommended) and choose \\\"Actual size\\\" or \\\"Scale: 100%\\\" in your browser print dialog for correct physical dimensions.</div>\\n      </div>\\n    </div>\\n  </div>\\n\\n  <script>\\n    const photo = document.getElementById('photo');\\n    const bgurl = document.getElementById('bgurl');\\n\\n    function applyBg(){\\n      const url = bgurl.value.trim();\\n      if(!url) return alert('Paste an image URL first');\\n      photo.style.backgroundImage = `url('${url}')`;\\n      photo.innerText = '';\\n    }\\n    function resetBg(){\\n      photo.style.backgroundImage = '';\\n      photo.innerHTML = 'Add a photo or click the controls to change background';\\n      bgurl.value = '';\\n    }\\n\\n    function setQuick(text){\\n      document.getElementById('message').innerText = text;\\n    }\\n\\n    /* Download PNG: simple approach using SVG foreignObject -> canvas\\n       Works best in modern browsers. If it fails, use Print -> Save as PDF or Print to physical card.\\n    */\\n    async function downloadPNG(){\\n      const node = document.getElementById('postcard');\\n      const w = Math.round(6*300); // 6 inches at 300 DPI\\n      const h = Math.round(4*300);\\n\\n      // Serialize node to SVG via foreignObject\\n      const xml = new XMLSerializer();\\n      const cloned = node.cloneNode(true);\\n      // Inline computed background images as style if present\\n      // (simple: convert url('...') to style background-image)\\n      const front = cloned.querySelector('#front');\\n\\n      const svg = `<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\\\n`+\\n        `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>`+\\n        `<foreignObject width='100%' height='100%'>`+\\n        `<div xmlns='http://www.w3.org/1999/xhtml' style='width:100%;height:100%;'>`+\\n        `${node.outerHTML}`+\\n        `</div>`+\\n        `</foreignObject></svg>`;\\n\\n      const img = new Image();\\n      const svgBlob = new Blob([svg],{type:'image/svg+xml;charset=utf-8'});\\n      const url = URL.createObjectURL(svgBlob);\\n      img.onload = function(){\\n        const c = document.createElement('canvas');\\n        c.width = w; c.height = h;\\n        const ctx = c.getContext('2d');\\n        // white background\\n        ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,w,h);\\n        ctx.drawImage(img,0,0,w,h);\\n        URL.revokeObjectURL(url);\\n        const png = c.toDataURL('image/png');\\n        const a = document.createElement('a');\\n        a.href = png; a.download = 'postcard.png';\\n        a.click();\\n      };\\n      img.onerror = function(e){\\n        alert('Download failed in this browser. Use Print -> Save as PDF or a different browser.');\\n      }\\n      img.src = url;\\n    }\\n  </script>\\n</body>\\n</html>\\n\",\r\n    \"back\": \"<!doctype html>\\n<html lang=\\\"en\\\">\\n<head>\\n  <meta charset=\\\"utf-8\\\" />\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\" />\\n  <title>Postcard Back Side</title>\\n  <style>\\n    :root{\\n      --card-w:6in;\\n      --card-h:4in;\\n      --safe:0.25in;\\n      --muted:#6b7280;\\n      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;\\n    }\\n\\n    body{\\n      background:linear-gradient(180deg,#f9fafb,#fff);\\n      display:flex;\\n      justify-content:center;\\n      align-items:center;\\n      height:100vh;\\n      margin:0;\\n    }\\n\\n    .postcard-back{\\n      width:var(--card-w);\\n      height:var(--card-h);\\n      background:white;\\n      border:1px solid rgba(0,0,0,0.08);\\n      box-shadow:0 10px 30px rgba(0,0,0,0.12);\\n      padding:var(--safe);\\n      box-sizing:border-box;\\n      display:flex;\\n      flex-direction:column;\\n      justify-content:space-between;\\n    }\\n\\n    /* Divider line */\\n    .divider{\\n      flex:1;\\n      border-bottom:1px dashed rgba(0,0,0,0.15);\\n      margin:12px 0;\\n    }\\n\\n    .top{\\n      display:flex;\\n      justify-content:space-between;\\n      align-items:flex-start;\\n    }\\n\\n    .stamp{\\n      width:1.5in;\\n      height:1.2in;\\n      border:2px dashed rgba(0,0,0,0.15);\\n      border-radius:6px;\\n      display:flex;\\n      align-items:center;\\n      justify-content:center;\\n      font-size:12px;\\n      color:var(--muted);\\n      font-weight:700;\\n    }\\n\\n    .address{\\n      flex:1;\\n      margin-left:12px;\\n      border-left:1px dashed rgba(0,0,0,0.12);\\n      padding-left:12px;\\n      display:flex;\\n      flex-direction:column;\\n      justify-content:center;\\n    }\\n\\n    .line{\\n      height:1.2em;\\n      border-bottom:1px dashed rgba(0,0,0,0.1);\\n      margin-bottom:8px;\\n    }\\n\\n    .message{\\n      flex:1;\\n      margin-right:1.2in;\\n      font-size:13px;\\n      color:#111;\\n      line-height:1.4;\\n    }\\n\\n    .sender{\\n      font-size:11px;\\n      color:var(--muted);\\n      text-align:left;\\n    }\\n\\n    @media print{\\n      body{background:white;margin:0}\\n      .postcard-back{box-shadow:none;border:0}\\n      @page{size: landscape; margin:0}\\n    }\\n\\n    [contenteditable]{\\n      outline:none;\\n    }\\n  </style>\\n</head>\\n<body>\\n  <div class=\\\"postcard-back\\\">\\n    <div class=\\\"top\\\">\\n      <div class=\\\"message\\\" contenteditable=\\\"true\\\">\\n        Dear friend,<br><br>\\n        Wishing you were here! The weather has been perfect and every day is an adventure.\\n      </div>\\n\\n      <div class=\\\"stamp\\\">STAMP</div>\\n    </div>\\n\\n    <div class=\\\"divider\\\"></div>\\n\\n    <div class=\\\"address\\\">\\n      <div class=\\\"line\\\" contenteditable=\\\"true\\\">Recipient Name</div>\\n      <div class=\\\"line\\\" contenteditable=\\\"true\\\">Street Address</div>\\n      <div class=\\\"line\\\" contenteditable=\\\"true\\\">City, State ZIP</div>\\n      <div class=\\\"line\\\" contenteditable=\\\"true\\\">Country</div>\\n    </div>\\n\\n    <div class=\\\"sender\\\" contenteditable=\\\"true\\\">From: Your Name</div>\\n  </div>\\n</body>\\n</html>\\n\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/design/generate-proof/postcard",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"design",
+								"generate-proof",
+								"postcard"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "api",
+			"item": [
+				{
+					"name": "proofletter",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"recipient\": {\r\n        \"id\": \"36d32c84-e620-469c-bb3e-9c9edf5ef221\",\r\n        \"firstName\": \"Akash\",\r\n        \"lastName\": \"Patel\",\r\n        \"company\": \"\",\r\n        \"externalReferenceNumber\": \"\",\r\n        \"address1\": \"A-39, Shivnery society\",\r\n        \"address2\": \"\",\r\n        \"city\": \"Vadodara\",\r\n        \"state\": \"Gujarat\",\r\n        \"zipCode\": \"390007\"\r\n    },\r\n    \"color\": false,\r\n    \"envelope\": {\r\n        \"font\": \"Bradley Hand\",\r\n        \"type\": \"Regular\",\r\n        \"fontColor\": \"Black\"\r\n    },\r\n    \"letter\": \"https://images.template.net/wp-content/uploads/2022/06/Postcard-Sizes-PDF1.pdf\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://api.dbrus.delpat.in/api/templates/proofletter",
+							"protocol": "https",
+							"host": [
+								"api",
+								"dbrus",
+								"delpat",
+								"in"
+							],
+							"path": [
+								"api",
+								"templates",
+								"proofletter"
 							]
 						}
 					},
