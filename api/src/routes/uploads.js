@@ -35,4 +35,16 @@ router.post("/letter", upload.single("letterPdf"), async (req, res) => {
     }
 });
 
+// Generic POST /api/uploads - accepts 'file' field for images and other uploads
+router.post("/", upload.single("file"), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+        const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+        res.json({ url, filename: req.file.filename });
+    } catch (err) {
+        console.error("Upload error:", err?.message || err);
+        res.status(500).json({ error: "Upload failed" });
+    }
+});
+
 module.exports = router;

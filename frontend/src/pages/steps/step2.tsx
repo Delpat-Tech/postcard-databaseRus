@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Input, Select } from "../../components/FormComponents";
+import { Input, Select, ImageInput } from "../../components/FormComponents";
 import { usePublicStore } from "../../store/publicStore";
 import { useTemplateStore } from "../../store/templateStore";
 
@@ -74,16 +74,19 @@ export default function Step2Config({
                 <div className="mt-6">
                     <h3 className="text-xl font-semibold mb-3">Design Details</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {designFields.map((f: any) => (
-                            <Input
-                                key={f.fieldKey}
-                                label={f.fieldLabel || f.fieldKey}
-                                name={f.fieldKey}
-                                value={(currentOrder.globalDesignVariables || []).find((v: any) => v.key === f.fieldKey)?.value || ""}
-                                onChange={(value: any) => handleDesignFieldChange(f.fieldKey, value)}
-                                required={!!f.mandatory}
-                            />
-                        ))}
+                        {designFields.map((f: any) => {
+                            const Component = f.fieldType === 'image' ? ImageInput : Input;
+                            return (
+                                <Component
+                                    key={f.fieldKey}
+                                    label={f.fieldLabel || f.fieldKey}
+                                    name={f.fieldKey}
+                                    value={(currentOrder.globalDesignVariables || []).find((v: any) => v.key === f.fieldKey)?.value || ""}
+                                    onChange={(value: any) => handleDesignFieldChange(f.fieldKey, value)}
+                                    required={!!f.mandatory}
+                                />
+                            );
+                        })}
                     </div>
                 </div>
             )}

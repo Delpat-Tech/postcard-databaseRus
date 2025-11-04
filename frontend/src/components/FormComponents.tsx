@@ -1,3 +1,6 @@
+import { useState } from 'react';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 interface InputProps {
   label: string;
   name: string;
@@ -154,6 +157,94 @@ export function Checkbox({
       <label htmlFor={name} className="ml-2 block text-sm text-gray-700">
         {label}
       </label>
+    </div>
+  );
+}
+
+interface ImageInputProps {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+  className?: string;
+}
+
+export function ImageInput({
+  label,
+  name,
+  value,
+  onChange,
+  required = false,
+  className = "",
+}: ImageInputProps) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file (JPEG, PNG)');
+      return;
+    }
+
+    setError(null);
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch(`${API_BASE_URL}/uploads`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || `Upload failed: ${res.status}`);
+      }
+
+      const data = await res.json();
+      onChange(data.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <div className={`mb-4 ${className}`}>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      <div className="mt-1 flex items-center gap-4">
+        <input
+          type="file"
+          id={name}
+          name={name}
+          accept="image/*"
+          onChange={handleFileChange}
+          className="block w-full text-sm text-gray-500
+            file:mr-4 file:py-2 file:px-4
+            file:rounded-md file:border-0
+            file:text-sm file:font-semibold
+            file:bg-blue-50 file:text-blue-700
+            hover:file:bg-blue-100"
+        />
+        {isUploading && <span className="text-sm text-gray-500">Uploading...</span>}
+      </div>
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {value && !error && (
+        <div className="mt-2">
+          <img src={value} alt="Preview" className="max-w-xs rounded border" />
+        </div>
+      )}
     </div>
   );
 }

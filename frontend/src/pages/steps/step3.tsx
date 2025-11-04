@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { Input, Button } from "../../components/FormComponents";
+import { Input, Button, ImageInput } from "../../components/FormComponents";
 import RecipientCSVUpload from "../../components/recipientcsv";
 import RecipientList from "../../components/RecipientList";
 import { useOrderStore } from "../../store/orderStore";
@@ -79,16 +79,21 @@ export default function Step3Recipients({ addRecipient }: { addRecipient: (r: an
                     <div className="md:col-span-2">
                         <h4 className="font-semibold mb-2">Design variables for this recipient</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {designFields.map((f: any) => (
-                                <Input
-                                    key={f.fieldKey}
-                                    label={f.fieldLabel || f.fieldKey}
-                                    name={f.fieldKey}
-                                    value={recipientForm.variables?.[f.fieldKey] || ""}
-                                    onChange={(val) => setRecipientForm({ ...recipientForm, variables: { ...(recipientForm.variables || {}), [f.fieldKey]: val } })}
-                                    required={!!f.mandatory}
-                                />
-                            ))}
+                            {designFields.map((f: any) => {
+                                const Component = f.fieldType === 'image' ? ImageInput : Input;
+                                return (
+                                    <Component
+                                        key={f.fieldKey}
+                                        label={f.fieldLabel || f.fieldKey}
+                                        name={f.fieldKey}
+                                        value={(currentOrder.globalDesignVariables || []).find((v: any) => v.key === f.fieldKey)?.value || ""}
+                                        // onChange={(value: any) => handleDesignFieldChange(f.fieldKey, value)}
+                                        onChange={(val) => setRecipientForm({ ...recipientForm, variables: { ...(recipientForm.variables || {}), [f.fieldKey]: val } })}
+
+                                        required={!!f.mandatory}
+                                    />
+                                );
+                            })}
                         </div>
                     </div>
                 )}
