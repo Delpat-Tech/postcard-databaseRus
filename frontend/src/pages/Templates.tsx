@@ -18,24 +18,6 @@ export default function Templates() {
   const navigate = useNavigate();
   const [loadingEditor, setLoadingEditor] = useState<string | null>(null);
   // Pricing definitions
-  type PricingRule = {
-    sizeKey: string;
-    sizeLabel: string;
-    mailClass: "FirstClass" | "Standard";
-    one: number;
-    twoTo99: number;
-    hundredUp: number;
-  };
-
-  const pricingTable: PricingRule[] = [
-    { sizeKey: "46", sizeLabel: "4.25 x 6", mailClass: "FirstClass", one: 1.99, twoTo99: 0.99, hundredUp: 0.89 },
-    { sizeKey: "68", sizeLabel: "6 x 8.5", mailClass: "Standard", one: 2.15, twoTo99: 1.14, hundredUp: 1.04 },
-    { sizeKey: "68", sizeLabel: "6 x 8.5", mailClass: "FirstClass", one: 2.35, twoTo99: 1.24, hundredUp: 1.10 },
-    { sizeKey: "611", sizeLabel: "6 x 11", mailClass: "Standard", one: 2.55, twoTo99: 1.41, hundredUp: 1.31 },
-    { sizeKey: "611", sizeLabel: "6 x 11", mailClass: "FirstClass", one: 2.75, twoTo99: 1.51, hundredUp: 1.41 },
-    { sizeKey: "811", sizeLabel: "8.5 x 11 Letters", mailClass: "Standard", one: 2.95, twoTo99: 1.57, hundredUp: 1.47 },
-    { sizeKey: "811", sizeLabel: "8.5 x 11 Letters", mailClass: "FirstClass", one: 3.25, twoTo99: 1.77, hundredUp: 1.67 },
-  ];
 
   useEffect(() => {
     (async () => {
@@ -59,7 +41,7 @@ export default function Templates() {
       setLoadingEditor(templateId);
       const template = await useTemplateStore.getState().openTemplateEditor(templateId);
 
-      setCurrentOrder({ templateId: template._id, designId: template.pcmDesignId || template._id, designName: template.name, designSize: pricingRules.find(p => p.sizeLabel === template.size)?.sizeKey || pricingTable.find(p => p.sizeLabel === template.size)?.sizeKey, isCustomDesign: true });
+      setCurrentOrder({ templateId: template._id, designId: template.pcmDesignId || template._id, designName: template.name, designSize: pricingRules.find(p => p.sizeLabel === template.size)?.sizeKey, isCustomDesign: true });
       navigate('/order');
 
       window.open(template.url, "_blank");
@@ -112,7 +94,7 @@ export default function Templates() {
                     <button
                       onClick={() => {
                         // set order design to this template (store DB _id and pcmDesignId)
-                        setCurrentOrder({ templateId: t._id, designId: t.pcmDesignId || t._id, designName: t.name, designSize: pricingRules.find(p => p.sizeLabel === t.size)?.sizeKey || pricingTable.find(p => p.sizeLabel === t.size)?.sizeKey, isCustomDesign: false });
+                        setCurrentOrder({ templateId: t._id, designId: t.pcmDesignId || t._id, designName: t.name, designSize: pricingRules.find(p => p.sizeLabel === t.size)?.sizeKey, isCustomDesign: false });
                         navigate(`/order?step=1&type=${encodeURIComponent(pageType)}`);
                       }}
                       className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"

@@ -2,13 +2,14 @@ import { useEffect } from "react";
 import { Input, Select, ImageInput } from "../../components/FormComponents";
 import { usePublicStore } from "../../store/publicStore";
 import { useTemplateStore } from "../../store/templateStore";
+import type { Order } from "../../store/types";
 
 export default function Step2Config({
     currentOrder,
     setCurrentOrder,
     sizeOptions,
     mailClassOptions,
-}: any) {
+}: { currentOrder: Order; setCurrentOrder: (updates: any) => void; sizeOptions: Array<{ label: string; value: string }>; mailClassOptions: Array<{ label: string; value: string }>; }) {
     const prices = usePublicStore((s) => s.prices);
     const templates = useTemplateStore((s) => s.templates);
     const selectedTemplate = templates.find((t) => t._id === currentOrder.templateId) || null;
@@ -64,6 +65,7 @@ export default function Step2Config({
         }
         setCurrentOrder({ globalDesignVariables: existing });
     };
+    console.log(currentOrder);
 
     return (
         <div className="space-y-6">
@@ -121,7 +123,15 @@ export default function Step2Config({
                         label="Size"
                         name="designSize"
                         value={currentOrder.designSize || "46"}
-                        onChange={(value) => setCurrentOrder({ designSize: value })}
+                        onChange={(value) => {
+                            if (currentOrder.designId) {
+                                setCurrentOrder({ designSize: currentOrder.designSize })
+                            }
+                            else {
+                                setCurrentOrder({ designSize: value })
+                            }
+                        }
+                        }
                         options={effectiveSizeOptions}
                     />
                     <Select

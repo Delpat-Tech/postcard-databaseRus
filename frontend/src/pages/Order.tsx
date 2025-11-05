@@ -56,7 +56,7 @@ export default function Order() {
     if (type === "postcard" || type === "letter") {
       if (step) {
         setProductType(type);
-        setCurrentOrder({ productType: type, mailClass: "FirstClass", designSize: type === "postcard" ? "46" : "811", isCustomDesign: (type === "letter" ? true : false) });
+        setCurrentOrder({ productType: type, mailClass: "FirstClass", isCustomDesign: (type === "letter" ? true : false) });
         setCurrentStep(1);
 
       }
@@ -255,7 +255,7 @@ export default function Order() {
     }
 
     // Validation for Step 3 (Recipients Step)
-    if (step === 3 && currentOrder.recipients?.length === 0) return false;
+    if (step === 3 && !(currentOrder.recipients?.length >= 1)) return false;
 
     return true;
   };
@@ -303,8 +303,7 @@ export default function Order() {
                   onSelect={(type) => {
                     setProductType(type);
                     // Set base config for the selected product type
-                    const initialSizeKey = pricingTable.find(p => p.mailClass === "FirstClass" && p.sizeKey === (type === "postcard" ? "46" : "811"))?.sizeKey;
-                    setCurrentOrder({ productType: type, mailClass: "FirstClass", designSize: initialSizeKey, isCustomDesign: (type === "letter" ? true : false) });
+                    setCurrentOrder({ productType: type, mailClass: "FirstClass", isCustomDesign: (type === "letter" ? true : false) });
                     setCurrentStep(1);
                   }}
                 />
@@ -344,6 +343,7 @@ export default function Order() {
                     handleGenerateProof();
                   }}
                   productType={productType}
+                  price={currentOrder.totalPrice}
                 />
               )}
 
@@ -357,13 +357,15 @@ export default function Order() {
             </Card>
           </div>
 
-          <div className="lg:col-span-1">
-            <OrderSummaryCard />
-          </div>
-        </div>
+          {currentStep !== 0 &&
+            < div className="lg:col-span-1">
+              <OrderSummaryCard />
+            </div>
+          }
+        </div >
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
+        < div className="flex justify-between mt-8" >
           <Button
             onClick={() => setCurrentStep((s) => Math.max(0, s - 1))}
             // Disable if on the first step (0) or on the final submission screen (TOTAL_STEPS=5)
@@ -374,15 +376,17 @@ export default function Order() {
           </Button>
 
           {/* The Next button is shown for steps 0, 1, 2, 3 */}
-          {currentStep >= 0 && currentStep <= 3 && (
-            <Button
-              onClick={() => setCurrentStep((s) => Math.min(4, s + 1))} // Max step is 4 (Review) before 'Approve' takes over
-              disabled={!isStepValid(currentStep)}
-            >
-              Next
-            </Button>
-          )}
-        </div>
+          {
+            currentStep >= 0 && currentStep <= 3 && (
+              <Button
+                onClick={() => setCurrentStep((s) => Math.min(4, s + 1))} // Max step is 4 (Review) before 'Approve' takes over
+                disabled={!isStepValid(currentStep)}
+              >
+                Next
+              </Button>
+            )
+          }
+        </div >
       </>
     );
   };

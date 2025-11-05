@@ -14,7 +14,6 @@ export default function OrderSummaryCard() {
   const size = currentOrder.designSize;
   const mailClass: "FirstClass" | "Standard" = (currentOrder.mailClass || "FirstClass") as any;
   const sizeKey = currentOrder.designSize || "";
-  console.log(currentOrder);
 
   // Ensure prices are loaded into publicStore when an order type is selected
   const fetchPricesByType = usePublicStore.getState().fetchPricesByType;
@@ -33,6 +32,7 @@ export default function OrderSummaryCard() {
     const rules = serverPricing || [];
     const rule = rules.find(r => r.sizeKey === size && r.mailClass === mailClass);
     if (!rule) return 0;
+    if (quantity === 0) return rule.one;
     if (quantity === 1) return rule.one;
     if (quantity >= 2 && quantity <= 99) return rule.twoTo99;
     return rule.hundredUp;
@@ -80,7 +80,7 @@ export default function OrderSummaryCard() {
         <div>
           <span className="font-medium">Size:</span>
           <span className="ml-2">
-            {serverPricing.find(p => p.sizeKey === size)?.sizeLabel}
+            {serverPricing.find(p => p.sizeKey === size)?.sizeLabel ? serverPricing.find(p => p.sizeKey === size)?.sizeLabel : "Size Unavailable"}
           </span>
         </div>
 
@@ -96,7 +96,7 @@ export default function OrderSummaryCard() {
 
         <div>
           <span className="font-medium">Total Order:</span>
-          <span className="ml-2 font-bold">${totalComputed}</span>
+          <span className="ml-2 font-bold">{`${pricePerPieceComputed === 0 ? "Pricing Unavailable" : `$${totalComputed}`}`}</span>
         </div>
       </div>
 
