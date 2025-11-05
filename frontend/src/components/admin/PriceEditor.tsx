@@ -16,7 +16,7 @@ const TYPES = ["postcard", "letter"] as const; //, "brochure", "bookmark"
 const SIZE_OPTIONS: Record<string, string> = {
     "46": "4.25 x 6",
     "58": "5 x 8",
-    "68": "6 x 8",
+    "68": "6 x 8.5",
     "69": "6 x 9",
     "611": "6 x 11",
     "811": "8.5 x 11",
