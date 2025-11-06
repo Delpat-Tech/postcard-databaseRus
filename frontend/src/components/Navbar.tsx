@@ -41,7 +41,7 @@ export default function Navbar() {
             to="/"
             className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent hover:opacity-90 transition-opacity"
           >
-            Proof<span className="text-blue-200">&</span>Approve
+            <img src="/logo.png" alt="Logo" className="inline h-auto w-64 mr-2 -mt-1" />
           </Link>
           <span className="text-xs text-blue-200/70">v{runtimeVersion ?? import.meta.env.VITE_APP_VERSION ?? '1.0.0'}</span>
         </div>

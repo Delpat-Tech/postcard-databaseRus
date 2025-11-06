@@ -102,7 +102,7 @@ app.get("/health", (req, res) => res.json({ ok: true, time: new Date() }));
 async function start() {
   try {
     let uri;
-    if (process.env.Node_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development') {
       uri = process.env.MONGO_URI;
     }
     else {
