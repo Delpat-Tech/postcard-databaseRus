@@ -61,6 +61,20 @@ export default function PriceEditor() {
 
     const handleAddOrUpdate = () => {
         if (!sizeKey) return alert("sizeKey is required");
+        
+        // Check for duplicate rule (only when adding new, not editing)
+        if (editingIndex === null) {
+            const duplicate = rules.find(r => r.sizeKey === sizeKey && r.mailClass === mailClass);
+            if (duplicate) {
+                return alert(
+                    `⚠️ Duplicate Rule Detected\n\n` +
+                    `A pricing rule for "${sizeLabel || sizeKey}" with "${mailClass}" mail class already exists.\n\n` +
+                    `Current prices: $${duplicate.one} (1) / $${duplicate.twoTo99} (2-99) / $${duplicate.hundredUp} (100+)\n\n` +
+                    `Please edit the existing rule instead of adding a new one.`
+                );
+            }
+        }
+        
         const newRule: Rule = { sizeKey, sizeLabel, mailClass, one, twoTo99, hundredUp };
         setRules((prev) => {
             const copy = [...prev];
