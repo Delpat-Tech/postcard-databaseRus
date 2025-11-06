@@ -57,7 +57,7 @@ router.post("/create-order", async (req, res) => {
     console.log(`✅ [CREATE-ORDER] PayPal order created: ${paypalOrderId}`);
     res.json({ id: paypalOrderId });
   } catch (err) {
-    console.error(" [CREATE-ORDER] Error:", err.response?.data || err.message);
+    console.error(" [CREATE-ORDER] Error:", err.response?.data || err.message, " ", err);
     res.status(500).json({ error: "Failed to create PayPal order" });
   }
 });
