@@ -16,9 +16,8 @@ export default function ProofPreview({
   isLoading = false,
   hasError = false,
   onRegenerate,
-  productType
+  productType,
 }: ProofPreviewProps) {
-
   const showProofModal = (url: string, title: string) => {
     if (!url) return;
 
@@ -85,8 +84,8 @@ export default function ProofPreview({
         </h3>
         <p className="text-red-600 mb-4">
           Please make sure you have selected a valid design or uploaded both
-          sides for your custom design if postcard and fontside if letter. Try again or contact support if the
-          issue persists.
+          sides for your custom design if postcard and fontside if letter. Try
+          again or contact support if the issue persists.
         </p>
         {onRegenerate && (
           <Button onClick={onRegenerate} className="mr-4">
@@ -95,8 +94,8 @@ export default function ProofPreview({
         )}
         <p className="text-sm text-red-500 mt-2">
           Need help? Contact our support team at{" "}
-          <a href="mailto:support@proofapprove.com" className="underline">
-            support@proofapprove.com
+          <a href="mailto:support@databaserus.com" className="underline">
+            support@databaserus.com
           </a>
         </p>
       </div>
@@ -111,11 +110,17 @@ export default function ProofPreview({
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             {front && (
               <Button
-
-                onClick={() => showProofModal(front, productType === "letter" ? "Letter Proof" : "Front Proof")}
+                onClick={() =>
+                  showProofModal(
+                    front,
+                    productType === "letter" ? "Letter Proof" : "Front Proof"
+                  )
+                }
                 className="w-full md:w-1/2"
               >
-                {productType === "letter" ? "View Letter Proof" : "View Front Proof"}
+                {productType === "letter"
+                  ? "View Letter Proof"
+                  : "View Front Proof"}
               </Button>
             )}
             {back && (
@@ -149,13 +154,11 @@ export default function ProofPreview({
           </div>
         )}
       </div>
-      {
-        onRegenerate && (
-          <Button onClick={onRegenerate} variant="secondary">
-            Regenerate Proof
-          </Button>
-        )
-      }
-    </div >
+      {onRegenerate && (
+        <Button onClick={onRegenerate} variant="secondary">
+          Regenerate Proof
+        </Button>
+      )}
+    </div>
   );
 }

@@ -21,7 +21,7 @@ export default function Home() {
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
             {pageType
               ? pageType.charAt(0).toUpperCase() + pageType.slice(1)
-              : "Welcome to Proof & Approve"}
+              : "Welcome to Bookmark Postcards"}
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             {pageType
@@ -30,12 +30,27 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link to={pageType ? `/order?type=${encodeURIComponent(pageType)}` : "/order"}>
+            <Link
+              to={
+                pageType
+                  ? `/order?type=${encodeURIComponent(pageType)}`
+                  : "/order"
+              }
+            >
               <Button className="text-lg px-8 py-3">Start Your Order</Button>
             </Link>
-            <Link to={pageType ? `/templates?type=${encodeURIComponent(pageType)}` : "/templates"}>
+            <Link
+              to={
+                pageType
+                  ? `/templates?type=${encodeURIComponent(pageType)}`
+                  : "/templates"
+              }
+            >
               <Button variant="secondary" className="text-lg px-8 py-3">
-                Browse {pageType ? pageType.charAt(0).toUpperCase() + pageType.slice(1) : "Templates"}
+                Browse{" "}
+                {pageType
+                  ? pageType.charAt(0).toUpperCase() + pageType.slice(1)
+                  : "Templates"}
               </Button>
             </Link>
             {token && (
@@ -87,7 +102,7 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold mb-2">Proof & Approve</h3>
+              <h3 className="text-lg font-semibold mb-2">Bookmark Postcards</h3>
               <p className="text-gray-600">
                 Review your design with our comprehensive checklist before final
                 approval.
@@ -121,15 +136,23 @@ export default function Home() {
           {/* If a pageType is selected, show a small template preview strip */}
           {pageType && templates.length > 0 && (
             <div className="mt-12">
-              <h3 className="text-xl font-semibold mb-4">Popular {pageType} templates</h3>
+              <h3 className="text-xl font-semibold mb-4">
+                Popular {pageType} templates
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {templates.slice(0, 6).map((t) => (
                   <div key={t._id} className="card p-3">
                     {t.previewUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={t.previewUrl} alt={t.name} className="w-full h-40 object-cover rounded-md mb-2" />
+                      <img
+                        src={t.previewUrl}
+                        alt={t.name}
+                        className="w-full h-40 object-cover rounded-md mb-2"
+                      />
                     ) : (
-                      <div className="w-full h-40 bg-gray-100 flex items-center justify-center text-gray-400">No preview</div>
+                      <div className="w-full h-40 bg-gray-100 flex items-center justify-center text-gray-400">
+                        No preview
+                      </div>
                     )}
                     <div className="flex items-center justify-between">
                       <div>
@@ -139,8 +162,15 @@ export default function Home() {
                       <div className="flex flex-col gap-2">
                         <button
                           onClick={() => {
-                            setCurrentOrder({ templateId: t._id, designId: t.pcmDesignId || t._id, designName: t.name, isCustomDesign: false });
-                            window.location.href = `/order?step=1&type=${encodeURIComponent(pageType)}`;
+                            setCurrentOrder({
+                              templateId: t._id,
+                              designId: t.pcmDesignId || t._id,
+                              designName: t.name,
+                              isCustomDesign: false,
+                            });
+                            window.location.href = `/order?step=1&type=${encodeURIComponent(
+                              pageType
+                            )}`;
                           }}
                           className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
                         >
