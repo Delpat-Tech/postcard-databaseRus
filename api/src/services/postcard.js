@@ -55,7 +55,8 @@ class PostcardService {
             const r = await this.client.get(`/design/${designId}/edit?duplicate=true&mode=embed`);
             const newdesign = await this.getDesignById(r.data.designID); // fixed
             const template = new Template(this.formatDesignForLocal(newdesign)); // fixed
-            template.isPublic = true;
+            template.isPublic = false; // Don't make duplicates public
+            template.isUserDuplicate = true; // Mark as user-created duplicate
             let savedtemplate = await template.save();
             savedtemplate = savedtemplate.toObject(); // convert Mongoose doc to plain object
             savedtemplate.url = r.data.url;

@@ -95,8 +95,11 @@ router.post("/proofletter", async (req, res) => {
 // GET /api/templates - Get all templates (admin only)
 router.get("/", adminAuth, async (req, res) => {
   try {
-    // exclude soft-deleted templates from normal listings
-    const templates = await Template.find({ deleted: { $ne: true } });
+    // exclude soft-deleted templates and user duplicates from admin listings
+    const templates = await Template.find({ 
+      deleted: { $ne: true },
+      isUserDuplicate: { $ne: true }
+    });
     res.json(templates);
   } catch (error) {
     res.status(500).json({ error: error.message });

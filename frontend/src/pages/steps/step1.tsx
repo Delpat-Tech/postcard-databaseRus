@@ -121,7 +121,7 @@ export default function Step1UploadAndSelect() {
                                 >
                                     Change
                                 </button>
-                                {selectedTemplate.allowPersonalize !== false &&
+                                {selectedTemplate?.allowPersonalize !== false &&
                                     <button
                                         onClick={async () => {
                                             try {
