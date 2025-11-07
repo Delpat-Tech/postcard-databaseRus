@@ -1,5 +1,6 @@
-import { useState } from 'react';
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { useState } from "react";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 interface InputProps {
   label: string;
@@ -39,7 +40,7 @@ export function Input({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
       />
     </div>
   );
@@ -52,6 +53,7 @@ interface SelectProps {
   onChange: (value: string) => void;
   options: { value: string; label: string }[];
   required?: boolean;
+  disabled?: boolean;
   className?: string;
 }
 
@@ -62,6 +64,7 @@ export function Select({
   onChange,
   options,
   required = false,
+  disabled = false,
   className = "",
 }: SelectProps) {
   return (
@@ -79,7 +82,10 @@ export function Select({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        disabled={disabled}
+        className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+          disabled ? "bg-gray-100 cursor-not-allowed opacity-60" : ""
+        }`}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -186,8 +192,17 @@ export function ImageInput({
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file (JPEG, PNG)');
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file (JPEG, PNG)");
+      return;
+    }
+
+    // Validate file size (10MB max)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      setError(
+        "Image must be less than 10MB. Please compress your image and try again."
+      );
       return;
     }
 
@@ -196,22 +211,27 @@ export function ImageInput({
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
       const res = await fetch(`${API_BASE_URL}/uploads`, {
-        method: 'POST',
-        body: formData
+        method: "POST",
+        body: formData,
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error || `Upload failed: ${res.status}`);
+        throw new Error(
+          err?.error || `Upload failed with status ${res.status}`
+        );
       }
 
       const data = await res.json();
       onChange(data.url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(
+        `Upload failed: ${errorMsg}. Please try again or contact support if the issue persists.`
+      );
     } finally {
       setIsUploading(false);
     }
@@ -237,7 +257,9 @@ export function ImageInput({
             file:bg-blue-50 file:text-blue-700
             hover:file:bg-blue-100"
         />
-        {isUploading && <span className="text-sm text-gray-500">Uploading...</span>}
+        {isUploading && (
+          <span className="text-sm text-gray-500">Uploading...</span>
+        )}
       </div>
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
       {value && !error && (
@@ -267,12 +289,15 @@ export function Button({
   className = "",
 }: ButtonProps) {
   const baseClasses =
-    "px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+    "px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95";
 
   const variantClasses = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
-    secondary: "bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500",
-    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+    primary:
+      "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-md hover:shadow-lg",
+    secondary:
+      "bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 shadow-md hover:shadow-lg",
+    danger:
+      "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-md hover:shadow-lg",
   };
 
   return (
@@ -300,7 +325,16 @@ export function Card({ children, className = "", onClick }: CardProps) {
     <div
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
-      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
       onClick={onClick}
       className={`bg-white rounded-lg shadow-md p-6 ${clickableClasses} ${className}`}
     >

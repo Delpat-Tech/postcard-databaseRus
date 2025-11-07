@@ -169,8 +169,12 @@ class PostcardService {
                 );
                 return response.data; // { front, back }
             } catch (apiError) {
-                console.log("Error generating proof from API:", apiError);
-                throw new Error("Failed to generate proof from PostcardMania API");
+                // Log full payload and API error for easier debugging
+                console.error("Error generating proof from API. Payload:", JSON.stringify(proofPayload));
+                console.error("PostcardMania error:", apiError?.response?.data || apiError?.message || apiError);
+                // Include recipient id if available to help trace issues
+                const recipientId = (recipient && (recipient.id || recipient.externalReferenceNumber)) || null;
+                throw new Error(`Failed to generate proof from PostcardMania API${recipientId ? ` for recipient ${recipientId}` : ""}: ${apiError?.response?.data?.message || apiError?.message || "Unknown error"}`);
             }
 
         } catch (error) {

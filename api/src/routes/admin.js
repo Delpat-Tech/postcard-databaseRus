@@ -9,8 +9,12 @@ const postcardManiaService = require("../services/postcard");
 // GET /api/admin/designs/import - Import latest designs from PostcardMania
 router.get("/designs/import", adminAuth, async (req, res) => {
   try {
-    const pcmDesignspostcard = (await postcardManiaService.getAllDesigns("postcard")).results;
-    const pcmDesignsletter = (await postcardManiaService.getAllDesigns("letter")).results;
+    const pcmDesignspostcard = (
+      await postcardManiaService.getAllDesigns("postcard")
+    ).results;
+    const pcmDesignsletter = (
+      await postcardManiaService.getAllDesigns("letter")
+    ).results;
     const pcmDesigns = pcmDesignspostcard.concat(pcmDesignsletter);
     console.log(`Fetched ${pcmDesigns.length} designs from PostcardMania`);
     console.log(pcmDesigns[0]);
@@ -161,15 +165,38 @@ router.post("/templates/:id/delete-external", adminAuth, async (req, res) => {
     if (!template) return res.status(404).json({ error: "Template not found" });
 
     const designId = template.pcmDesignId;
-    if (!designId) return res.status(400).json({ error: "Template has no PostcardMania design id" });
+    if (!designId)
+      return res
+        .status(400)
+        .json({ error: "Template has no PostcardMania design id" });
 
-    // attempt to delete on PostcardMania
+    // Check if any orders reference this template
+    const ordersUsingTemplate = await Order.find({ templateId: req.params.id });
+
+    if (ordersUsingTemplate.length > 0) {
+      // Soft delete only (hide from public, keep in DB for existing orders)
+      const softDeletedTemplate = await Template.findByIdAndUpdate(
+        req.params.id,
+        { deleted: true, isPublic: false, updatedAt: new Date() },
+        { new: true }
+      );
+      return res.json({
+        message: `Template soft-deleted (hidden from public). ${ordersUsingTemplate.length} existing order(s) still reference this template.`,
+        template: softDeletedTemplate,
+        ordersCount: ordersUsingTemplate.length,
+      });
+    }
+
+    // No orders reference it - safe to hard delete
+    // Attempt to delete on PostcardMania
     await postcardManiaService.deleteDesign(designId);
 
-    // remove local DB record permanently
+    // Remove local DB record permanently
     await Template.findByIdAndDelete(req.params.id);
 
-    res.json({ message: "Template permanently deleted from PostcardMania and database" });
+    res.json({
+      message: "Template permanently deleted from PostcardMania and database",
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -195,13 +222,18 @@ router.put("/prices", adminAuth, async (req, res) => {
   try {
     const type = String(req.query.type || "postcard");
     const rules = req.body.pricing || [];
-    if (!Array.isArray(rules)) return res.status(400).json({ error: "pricing must be an array" });
+    if (!Array.isArray(rules))
+      return res.status(400).json({ error: "pricing must be an array" });
 
     const key = type === "bookmark" ? "bookmark" : type;
     const updateObj = { updatedAt: new Date() };
     updateObj[`pricingByType.${key}`] = rules;
 
-    const p = await Price.findOneAndUpdate({}, { $set: updateObj }, { new: true, upsert: true, setDefaultsOnInsert: true });
+    const p = await Price.findOneAndUpdate(
+      {},
+      { $set: updateObj },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
     res.json(p);
   } catch (error) {
     res.status(500).json({ error: error.message });

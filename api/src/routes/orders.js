@@ -16,7 +16,9 @@ const Price = require("../models/Price");
  */
 function calculatePricePerPieceFromRules(rules, size, mailClass, quantity) {
   if (!Array.isArray(rules) || rules.length === 0) return 0;
-  const rule = rules.find((r) => r.sizeKey === size && r.mailClass === mailClass);
+  const rule = rules.find(
+    (r) => r.sizeKey === size && r.mailClass === mailClass
+  );
   if (!rule) return 0;
 
   if (quantity === 1) return rule.one;
@@ -43,32 +45,51 @@ router.post("/", async (req, res) => {
     } else {
       const ra = data.returnAddress;
       if (!ra.firstName || !ra.lastName)
-        return res.status(400).json({ error: "Return address must include first and last name." });
+        return res
+          .status(400)
+          .json({ error: "Return address must include first and last name." });
       if (!ra.address1 || !ra.city || !ra.state || !ra.zipCode)
-        return res.status(400).json({ error: "Return address must include full address details (address1, city, state, zipCode)." });
+        return res.status(400).json({
+          error:
+            "Return address must include full address details (address1, city, state, zipCode).",
+        });
     }
 
     if (!Array.isArray(data.recipients) || data.recipients.length === 0) {
-      return res.status(400).json({ error: "At least one recipient is required." });
+      return res
+        .status(400)
+        .json({ error: "At least one recipient is required." });
     }
     const recipientCount = data.recipients.length;
 
     // Validate recipients one by one
     for (const [index, r] of data.recipients.entries()) {
       if (!r.firstName || !r.lastName)
-        return res.status(400).json({ error: `Recipient ${index + 1}: First name and last name are required.` });
+        return res.status(400).json({
+          error: `Recipient ${
+            index + 1
+          }: First name and last name are required.`,
+        });
       if (!r.address1 || !r.city || !r.state || !r.zipCode)
-        return res.status(400).json({ error: `Recipient ${index + 1}: Address1, City, State, and Zip Code are required.` });
+        return res.status(400).json({
+          error: `Recipient ${
+            index + 1
+          }: Address1, City, State, and Zip Code are required.`,
+        });
     }
 
     // Design validation (either custom or from library)
     if (!data.isCustomDesign && !data.front) {
       if (!data.designId && !data.designName) {
-        return res.status(400).json({ error: "Design ID or name is required for non-custom designs." });
+        return res.status(400).json({
+          error: "Design ID or name is required for non-custom designs.",
+        });
       }
     } else {
       if (!data.designSize) {
-        return res.status(400).json({ error: "Design size is required for custom designs." });
+        return res
+          .status(400)
+          .json({ error: "Design size is required for custom designs." });
       }
     }
 
@@ -78,7 +99,10 @@ router.post("/", async (req, res) => {
 
     if (!designSize || !mailClass) {
       // Should have been caught by frontend/design validation, but for safety:
-      return res.status(400).json({ error: "Design size and mail class are required for pricing calculation." });
+      return res.status(400).json({
+        error:
+          "Design size and mail class are required for pricing calculation.",
+      });
     }
 
     // Determine product type (default to postcard when not provided)
@@ -88,16 +112,28 @@ router.post("/", async (req, res) => {
     let pricePerPiece = 0;
     try {
       const priceDoc = await Price.findOne();
-      const rules = (priceDoc && priceDoc.pricingByType && priceDoc.pricingByType[productType]) || [];
-      pricePerPiece = calculatePricePerPieceFromRules(rules, designSize, mailClass, recipientCount);
+      const rules =
+        (priceDoc &&
+          priceDoc.pricingByType &&
+          priceDoc.pricingByType[productType]) ||
+        [];
+      pricePerPiece = calculatePricePerPieceFromRules(
+        rules,
+        designSize,
+        mailClass,
+        recipientCount
+      );
     } catch (priceErr) {
       console.error("Error fetching pricing from DB:", priceErr);
       pricePerPiece = 0;
     }
     const totalPrice = Number((pricePerPiece * recipientCount).toFixed(2));
 
+    // Prevent orders with $0 pricing (no valid pricing rule found)
     if (totalPrice === 0 && recipientCount > 0) {
-      console.warn(`Pricing rule not found for Size: ${designSize}, Class: ${mailClass}. Setting total to 0.`);
+      return res.status(400).json({
+        error: `Pricing unavailable for the selected options (Size: ${designSize}, Mail Class: ${mailClass}). Please contact support or choose different options.`,
+      });
     }
 
     // --- Step 3: Proceed to save ---
@@ -105,14 +141,13 @@ router.post("/", async (req, res) => {
       ...data,
       status: "draft",
       pricePerPiece: pricePerPiece,
-      totalPrice: totalPrice
+      totalPrice: totalPrice,
     };
 
     const order = new Order(orderData);
     await order.save();
 
     res.status(201).json(order);
-
   } catch (error) {
     console.error("Error creating order:", error);
     res.status(500).json({ error: error.message });
@@ -159,26 +194,32 @@ router.post("/:id/recipients", async (req, res) => {
 // POST /api/orders/:id/submit - Submit order
 router.post("/:id/submit", async (req, res) => {
   try {
-
     const { paypalid } = req.body;
     if (!paypalid) {
-      return res.status(400).json({ error: "paypalid is required to submit order" });
+      return res
+        .status(400)
+        .json({ error: "paypalid is required to submit order" });
     }
     const order = await Order.findByIdAndUpdate(
       req.params.id,
-      { status: "pending_payment_verification", paypalorderid: paypalid, updatedAt: new Date() },
+      {
+        status: "pending_payment_verification",
+        paypalorderid: paypalid,
+        updatedAt: new Date(),
+      },
       { new: true }
     );
     if (!order) return res.status(404).json({ error: "Order not found" });
-    const template = await Tempalate.findOneAndUpdate({ pcmDesignId: order.designId, isCustomDesign: true },
+    const template = await Tempalate.findOneAndUpdate(
+      { pcmDesignId: order.designId, isCustomDesign: true },
       {
         previewUrl: order.frontproof,
-        isPublic: false
+        isPublic: false,
       },
       {
-        new: true
-      })
-
+        new: true,
+      }
+    );
 
     res.json(order);
   } catch (error) {
@@ -224,11 +265,16 @@ router.post("/:id/approve", adminAuth, async (req, res) => {
     let pcmResponse;
     if (order.productType === "postcard") {
       try {
-        const pcmOrderData = postcardManiaService.formatOrderForPCMpostcard(order);
-        pcmResponse = await postcardManiaService.createOrderpostcard(pcmOrderData);
+        const pcmOrderData =
+          postcardManiaService.formatOrderForPCMpostcard(order);
+        pcmResponse = await postcardManiaService.createOrderpostcard(
+          pcmOrderData
+        );
       } catch (pcmError) {
         console.error("Error sending order to PostcardMania:", pcmError);
-        return res.status(500).json({ error: "Failed to submit order to PostcardMania" });
+        return res
+          .status(500)
+          .json({ error: "Failed to submit order to PostcardMania" });
       }
 
       try {
@@ -239,16 +285,22 @@ router.post("/:id/approve", adminAuth, async (req, res) => {
         await order.save();
       } catch (saveError) {
         console.error("Error updating order after PCM submission:", saveError);
-        return res.status(500).json({ error: "Failed to update order status after PCM submission" });
+        return res.status(500).json({
+          error: "Failed to update order status after PCM submission",
+        });
       }
-    }
-    else if (order.productType === "letter") {
+    } else if (order.productType === "letter") {
       try {
-        const pcmOrderData = postcardManiaService.formatOrderForPCMletter(order);
-        pcmResponse = await postcardManiaService.createOrderletter(pcmOrderData);
+        const pcmOrderData =
+          postcardManiaService.formatOrderForPCMletter(order);
+        pcmResponse = await postcardManiaService.createOrderletter(
+          pcmOrderData
+        );
       } catch (pcmError) {
         console.error("Error sending letter order to PostcardMania:", pcmError);
-        return res.status(500).json({ error: "Failed to submit letter order to PostcardMania" });
+        return res
+          .status(500)
+          .json({ error: "Failed to submit letter order to PostcardMania" });
       }
       try {
         order.status = "submitted_to_pcm";
@@ -258,12 +310,14 @@ router.post("/:id/approve", adminAuth, async (req, res) => {
         await order.save();
       } catch (saveError) {
         console.error("Error updating order after PCM submission:", saveError);
-        return res.status(500).json({ error: "Failed to update order status after PCM submission" });
+        return res.status(500).json({
+          error: "Failed to update order status after PCM submission",
+        });
       }
-    }
-
-    else {
-      return res.status(400).json({ error: "Unsupported product type for approval" });
+    } else {
+      return res
+        .status(400)
+        .json({ error: "Unsupported product type for approval" });
     }
     res.json(order);
   } catch (error) {

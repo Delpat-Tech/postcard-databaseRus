@@ -12,6 +12,8 @@ export default function TemplatesPanel() {
     "all" | "public" | "private"
   >("all");
   const [openDeleteFor, setOpenDeleteFor] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // close delete popover when clicking outside or pressing Escape
   useEffect(() => {
@@ -47,19 +49,25 @@ export default function TemplatesPanel() {
     templateFilter === "all"
       ? true
       : templateFilter === "public"
-        ? t.isPublic
-        : !t.isPublic
+      ? t.isPublic
+      : !t.isPublic
   );
 
   const handleImportDesigns = async () => {
+    setIsImporting(true);
     try {
       await useAdminStore.getState().importDesigns();
       await fetchAllTemplates();
       setTemplateFilter("all");
-      alert("Import complete");
+      alert("✅ Import complete! Templates have been refreshed.");
     } catch (e) {
       console.error(e);
-      alert("Import failed: " + (e instanceof Error ? e.message : String(e)));
+      alert(
+        "❌ Import failed. Please check your connection and try again. Error: " +
+          (e instanceof Error ? e.message : String(e))
+      );
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -75,10 +83,11 @@ export default function TemplatesPanel() {
               <button
                 key={f}
                 onClick={() => setTemplateFilter(f as any)}
-                className={`px-3 py-1 text-sm ${templateFilter === f
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                className={`px-3 py-1 text-sm ${
+                  templateFilter === f
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
               </button>
@@ -88,23 +97,31 @@ export default function TemplatesPanel() {
           {/* Refresh */}
           <Button
             onClick={async () => {
+              setIsRefreshing(true);
               try {
                 await fetchAllTemplates();
-                alert("Templates refreshed");
+                alert("✅ Templates refreshed successfully!");
               } catch (e) {
                 console.error(e);
-                alert("Failed to refresh templates");
+                alert("❌ Failed to refresh templates. Please try again.");
+              } finally {
+                setIsRefreshing(false);
               }
             }}
             variant="secondary"
             className="text-sm"
+            disabled={isRefreshing}
           >
-            Refresh
+            {isRefreshing ? "Refreshing..." : "Refresh"}
           </Button>
 
           {/* Import */}
-          <Button onClick={handleImportDesigns} className="text-sm">
-            Import Designs
+          <Button
+            onClick={handleImportDesigns}
+            className="text-sm"
+            disabled={isImporting}
+          >
+            {isImporting ? "Importing..." : "Import Designs"}
           </Button>
         </div>
       </div>
@@ -150,10 +167,11 @@ export default function TemplatesPanel() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-3">
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${template.isPublic
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
-                      }`}
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      template.isPublic
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
                   >
                     {template.isPublic ? "Public" : "Private"}
                   </span>
@@ -174,12 +192,14 @@ export default function TemplatesPanel() {
                       }
                     />
                     <div
-                      className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${template.isPublic ? "bg-green-500" : "bg-gray-300"
-                        }`}
+                      className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${
+                        template.isPublic ? "bg-green-500" : "bg-gray-300"
+                      }`}
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow transform transition-transform ${template.isPublic ? "translate-x-5" : ""
-                          }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow transform transition-transform ${
+                          template.isPublic ? "translate-x-5" : ""
+                        }`}
                       ></div>
                     </div>
                     <span className="text-sm text-gray-700">
@@ -221,14 +241,16 @@ export default function TemplatesPanel() {
                       }
                     />
                     <div
-                      className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${template.allowPersonalize
-                        ? "bg-indigo-600"
-                        : "bg-gray-300"
-                        }`}
+                      className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${
+                        template.allowPersonalize
+                          ? "bg-indigo-600"
+                          : "bg-gray-300"
+                      }`}
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow transform transition-transform ${template.allowPersonalize ? "translate-x-5" : ""
-                          }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow transform transition-transform ${
+                          template.allowPersonalize ? "translate-x-5" : ""
+                        }`}
                       ></div>
                     </div>
                     <span className="text-sm text-gray-700">
@@ -249,8 +271,10 @@ export default function TemplatesPanel() {
               {/* Footer: Set Type (left) and Delete (right) */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <label className="text-sm text-gray-600 mr-1">{"Product Type =>"}{template.type || "postcard"}</label>
-
+                  <label className="text-sm text-gray-600 mr-1">
+                    {"Product Type =>"}
+                    {template.type || "postcard"}
+                  </label>
                 </div>
 
                 <div className="flex items-center">
@@ -304,7 +328,7 @@ export default function TemplatesPanel() {
                               console.error(e);
                               alert(
                                 "Failed to remove template: " +
-                                (e instanceof Error ? e.message : String(e))
+                                  (e instanceof Error ? e.message : String(e))
                               );
                             }
                           }}
@@ -330,7 +354,7 @@ export default function TemplatesPanel() {
                               console.error(e);
                               alert(
                                 "Failed to permanently delete template: " +
-                                (e instanceof Error ? e.message : String(e))
+                                  (e instanceof Error ? e.message : String(e))
                               );
                             }
                           }}
